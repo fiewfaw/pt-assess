@@ -359,18 +359,19 @@
     </div>
   </template>
 
-  <!-- Sticky action bar -->
+  <!-- Sticky action bar — auto-saves, just confirm when done -->
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 z-30">
-    <div class="max-w-2xl mx-auto flex gap-2">
-      <button @click="saveVisit()" class="flex-1 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold py-3 rounded-lg">
-        💾 Save Visit
+    <div class="max-w-2xl mx-auto flex gap-2 items-center">
+      <div class="flex-1 text-sm text-slate-500">
+        <span x-show="saving">⏳ กำลังบันทึก...</span>
+        <span x-show="!saving && saved && lastSavedAt" class="text-emerald-600">
+          ✓ บันทึกแล้ว <span x-text="timeAgo(lastSavedAt)"></span>
+        </span>
+        <span x-show="!saving && !saved" class="text-amber-600">● ยังไม่บันทึก (auto ใน 3 วิ.)</span>
+      </div>
+      <button @click="done()" class="px-6 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold py-3 rounded-lg">
+        ✓ เสร็จ
       </button>
-      <button @click="exportJSON()" class="px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg" title="Export JSON">
-        📤
-      </button>
-      <a :href="`patient.html?hn=${hn}`" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg flex items-center" title="ยกเลิก">
-        ✕
-      </a>
     </div>
   </div>
 

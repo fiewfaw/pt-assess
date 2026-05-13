@@ -38,6 +38,9 @@ function visitForm() {
     prevData: {},
     mode: 'new',
     saved: true,
+    saving: false,
+    lastSavedAt: null,
+    _initialized: false,
     template: 'stroke',
     open: { info: true, vs: false, cog: false, brun: true, mas: true,
             mmt: true, sens: false, bal: true, mob: true, bi: false,
@@ -117,11 +120,22 @@ function visitForm() {
         }
       }
 
-      // Auto-save draft every 5s
-      this.$watch('data', () => { this.saved = false; }, { deep: true });
-      setInterval(() => {
-        if (!this.saved) this.autoSave();
-      }, 5000);
+      // Mark initialized AFTER initial data load so the watch doesn't auto-save the preload
+      await this.$nextTick();
+      this._initialized = true;
+
+      // Auto-save: 3s after last change (debounced)
+      this.$watch('data', () => {
+        if (!this._initialized) return;
+        this.saved = false;
+        clearTimeout(this._saveTimer);
+        this._saveTimer = setTimeout(() => this._autoSave(), 3000);
+      }, { deep: true });
+
+      // Flush on tab close / navigate
+      window.addEventListener('beforeunload', () => {
+        if (!this.saved) this._autoSave();
+      });
     },
 
     _deepMerge(target, source) {
@@ -226,52 +240,51 @@ function visitForm() {
 
     toggle(k) { this.open[k] = !this.open[k]; },
 
-    autoSave() {
-      // Draft auto-save (overwrite-safe local draft)
-      localStorage.setItem(`pt:draft:${this.hn}`, JSON.stringify({
-        ...this.data, _savedAt: new Date().toISOString(),
-      }));
-      this.saved = true;
-    },
-
-    async saveVisit() {
-      const storage = window.Storage.get();
-      const changes = window.Storage.visitDiff(this.prevData, this.data);
-      const visit = {
-        hn: this.hn,
-        visitId: this.visitId || undefined,
-        visitDate: this.data.date,
-        template: this.template,
-        data: this.data,
-        changes,
-        prevVisitId: this.prevVisit?.visitId || null,
-        createdAt: new Date().toISOString(),
-      };
-      const saved = await storage.saveVisit(this.hn, visit);
-      // Clean draft
-      localStorage.removeItem(`pt:draft:${this.hn}`);
-      alert(`บันทึก Visit #${saved.visitId} (${changes.length} changes)`);
-      location.href = `patient.html?hn=${this.hn}`;
-    },
-
-    exportJSON() {
-      const snapshot = {
-        patient: this.patient,
-        visit: {
-          visitId: this.visitId || `draft-${Date.now()}`,
+    async _autoSave() {
+      // Skip if new visit with no changes — don't pollute records
+      const changeCount = window.Storage.visitDiff(this.prevData, this.data).length;
+      if (this.mode === 'new' && !this.visitId && changeCount === 0) {
+        this.saved = true;
+        return;
+      }
+      this.saving = true;
+      try {
+        const storage = window.Storage.get();
+        const visit = {
+          hn: this.hn,
+          visitId: this.visitId || undefined,
           visitDate: this.data.date,
           template: this.template,
           data: this.data,
           changes: window.Storage.visitDiff(this.prevData, this.data),
-        },
-        _meta: { exportedAt: new Date().toISOString(), biTotal: this.bi_total },
-      };
-      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-      const filename = `pt-${this.hn}-${this.data.date}.json`;
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
+          prevVisitId: this.prevVisit?.visitId || null,
+          createdAt: new Date().toISOString(),
+        };
+        const saved = await storage.saveVisit(this.hn, visit);
+        this.visitId = saved.visitId;  // remember for subsequent updates
+        this.saved = true;
+        this.lastSavedAt = new Date();
+      } catch (e) {
+        console.error('autosave failed', e);
+        this.saved = false;
+      } finally {
+        this.saving = false;
+      }
+    },
+
+    async done() {
+      clearTimeout(this._saveTimer);
+      if (!this.saved) await this._autoSave();
+      location.href = `patient.html?hn=${this.hn}`;
+    },
+
+    timeAgo(date) {
+      if (!date) return '';
+      const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+      if (sec < 5) return 'เมื่อกี้';
+      if (sec < 60) return `${sec} วิ.`;
+      if (sec < 3600) return `${Math.floor(sec/60)} นาที`;
+      return `${Math.floor(sec/3600)} ชม.`;
     },
 
     voice(field) {
