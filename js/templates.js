@@ -11,7 +11,7 @@ const Templates = {
     name: 'Stroke',
     icon: '🧠',
     description: 'CVA / hemiparesis / hemiplegia',
-    sections: ['info', 'vs', 'cog', 'brun', 'mas', 'mmt', 'sens', 'bal', 'mob', 'bi', 'special', 'plan'],
+    sections: ['info', 'vs', 'cog', 'brun', 'mas', 'mmt', 'sens', 'bodychart', 'bal', 'mob', 'bi', 'special', 'plan'],
   },
   'knee-oa': {
     id: 'knee-oa',

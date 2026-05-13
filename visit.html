@@ -226,6 +226,57 @@
         </div>
       </section>
 
+      <!-- Section: Body Chart Canvas -->
+      <section x-show="sec === 'bodychart'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('bodychart')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">
+            🗺️ Body Chart
+            <span x-show="chartStrokes.length > 0" class="text-xs text-emerald-600 font-normal" x-text="`· ${chartStrokes.length} marks`"></span>
+          </span>
+          <span x-text="open.bodychart ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.bodychart" x-collapse class="px-4 pb-4 space-y-2">
+          <!-- Tool palette -->
+          <div class="flex flex-wrap gap-1">
+            <template x-for="t in chartTools" :key="t.id">
+              <button @click="chartTool = t.id"
+                :class="chartTool === t.id ? 'chip-on' : 'chip'"
+                class="text-xs"
+                x-text="`${t.icon} ${t.label}`"></button>
+            </template>
+          </div>
+          <div class="flex gap-1">
+            <template x-for="sz in [2, 4, 8]" :key="sz">
+              <button @click="chartSize = sz"
+                :class="chartSize === sz ? 'pill-on' : 'pill'"
+                class="text-xs flex-none">
+                <span class="inline-block rounded-full bg-current"
+                  :style="`width:${sz*2}px;height:${sz*2}px;vertical-align:middle`"></span>
+              </button>
+            </template>
+            <button @click="chartUndo()" class="pill text-xs ml-2">↶ Undo</button>
+            <button @click="chartClear()" class="pill text-xs text-red-600">🗑 Clear</button>
+          </div>
+          <p class="text-xs text-slate-400">เขียน/วาดด้วย S Pen หรือนิ้ว · auto-save อัตโนมัติ</p>
+          <!-- Canvas overlay on body chart -->
+          <div class="relative inline-block w-full border border-slate-200 rounded-lg overflow-hidden bg-white">
+            <img src="assets/body-chart.jpg"
+                 alt="body chart"
+                 class="block w-full select-none pointer-events-none"
+                 x-ref="chartImg"
+                 @load="chartSetupCanvas()" />
+            <canvas x-ref="chartCanvas"
+                    class="absolute inset-0 w-full h-full"
+                    style="touch-action: none;"
+                    @pointerdown.prevent="chartStart($event)"
+                    @pointermove.prevent="chartMove($event)"
+                    @pointerup="chartEnd()"
+                    @pointercancel="chartEnd()"
+                    @pointerleave="chartEnd()"></canvas>
+          </div>
+        </div>
+      </section>
+
       <!-- Section: Balance -->
       <section x-show="sec === 'bal'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('bal')" class="w-full px-4 py-3 flex justify-between items-center text-left">

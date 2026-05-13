@@ -21,6 +21,7 @@ function visitForm() {
     mas: {},
     mmt: {},
     sensation: {},
+    bodyChart: [],   // array of strokes [{tool, color, size, points: [[x,y],...]}]
     balance: {}, bbs: '',
     mobility: {}, gait: '',
     bi: {},
@@ -43,8 +44,23 @@ function visitForm() {
     _initialized: false,
     template: 'stroke',
     open: { info: true, vs: false, cog: false, brun: true, mas: true,
-            mmt: true, sens: false, bal: true, mob: true, bi: false,
+            mmt: true, sens: false, bodychart: false, bal: true, mob: true, bi: false,
             special: false, plan: true },
+
+    // Body chart canvas state
+    chartTool: 'pain',
+    chartSize: 4,
+    chartStrokes: [],
+    _chartDrawing: false,
+    _chartCurrent: null,
+    chartTools: [
+      { id: 'pain',      color: '#dc2626', label: 'Pain',      icon: '🔴' },
+      { id: 'weakness',  color: '#2563eb', label: 'Weakness',  icon: '🔵' },
+      { id: 'spastic',   color: '#ca8a04', label: 'Spastic',   icon: '🟡' },
+      { id: 'sensation', color: '#16a34a', label: 'Sens loss', icon: '🟢' },
+      { id: 'note',      color: '#0f172a', label: 'Note',      icon: '⚫' },
+      { id: 'eraser',    color: null,      label: 'Eraser',    icon: '🧽' },
+    ],
 
     data: blankData(),
     blankData,
@@ -99,6 +115,8 @@ function visitForm() {
           this.data.date = new Date().toISOString().slice(0, 10);
           this.prevData = JSON.parse(JSON.stringify(this.prevVisit.data));
         }
+        // Body chart is per-visit (don't carry strokes forward)
+        this.data.bodyChart = [];
         // Determine next visit number
         const visits = await storage.listVisits(this.hn);
         const nums = visits.map(v => parseInt(v.visitId, 10)).filter(n => !isNaN(n));
@@ -120,6 +138,11 @@ function visitForm() {
         }
       }
 
+      // Sync body chart strokes from loaded data
+      if (Array.isArray(this.data.bodyChart)) {
+        this.chartStrokes = [...this.data.bodyChart];
+      }
+
       // Mark initialized AFTER initial data load so the watch doesn't auto-save the preload
       await this.$nextTick();
       this._initialized = true;
@@ -131,6 +154,11 @@ function visitForm() {
         clearTimeout(this._saveTimer);
         this._saveTimer = setTimeout(() => this._autoSave(), 3000);
       }, { deep: true });
+
+      // Redraw body chart when section first opens
+      this.$watch('open.bodychart', (val) => {
+        if (val) this.chartSetupCanvas();
+      });
 
       // Flush on tab close / navigate
       window.addEventListener('beforeunload', () => {
@@ -285,6 +313,118 @@ function visitForm() {
       if (sec < 60) return `${sec} วิ.`;
       if (sec < 3600) return `${Math.floor(sec/60)} นาที`;
       return `${Math.floor(sec/3600)} ชม.`;
+    },
+
+    // ---- Body chart canvas methods ----
+    chartSetupCanvas() {
+      this.$nextTick(() => {
+        const canvas = this.$refs.chartCanvas;
+        const img = this.$refs.chartImg;
+        if (!canvas || !img || !img.naturalWidth) return;
+        if (canvas.width !== img.naturalWidth) {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+        }
+        this.chartRedraw();
+      });
+    },
+
+    _chartPoint(e) {
+      const canvas = this.$refs.chartCanvas;
+      const rect = canvas.getBoundingClientRect();
+      return [
+        Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+        Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
+      ];
+    },
+
+    chartStart(e) {
+      this.chartSetupCanvas();
+      this._chartDrawing = true;
+      try { e.target.setPointerCapture?.(e.pointerId); } catch {}
+      const tool = this.chartTools.find(t => t.id === this.chartTool);
+      const pt = this._chartPoint(e);
+      this._chartCurrent = {
+        tool: this.chartTool,
+        color: tool?.color,
+        size: this.chartSize,
+        points: [pt],
+      };
+      this._chartDrawStroke(this._chartCurrent);
+    },
+
+    chartMove(e) {
+      if (!this._chartDrawing || !this._chartCurrent) return;
+      const pt = this._chartPoint(e);
+      this._chartCurrent.points.push(pt);
+      this._chartDrawStroke(this._chartCurrent);
+    },
+
+    chartEnd() {
+      if (this._chartCurrent && this._chartCurrent.points.length > 0) {
+        this.chartStrokes.push(this._chartCurrent);
+        this.data.bodyChart = [...this.chartStrokes];
+      }
+      this._chartDrawing = false;
+      this._chartCurrent = null;
+    },
+
+    _chartDrawStroke(stroke) {
+      const canvas = this.$refs.chartCanvas;
+      if (!canvas || !canvas.width) return;
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      const sizeFactor = stroke.tool === 'eraser' ? 4 : 1;
+      if (stroke.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = '#000';
+        ctx.fillStyle = '#000';
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+        ctx.fillStyle = stroke.color;
+      }
+      ctx.lineWidth = stroke.size * sizeFactor;
+
+      const pts = stroke.points;
+      if (pts.length === 1) {
+        const p = pts[0];
+        ctx.beginPath();
+        ctx.arc(p[0] * canvas.width, p[1] * canvas.height,
+                stroke.size * sizeFactor / 2, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] * canvas.width, pts[0][1] * canvas.height);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i][0] * canvas.width, pts[i][1] * canvas.height);
+      }
+      ctx.stroke();
+    },
+
+    chartRedraw() {
+      const canvas = this.$refs.chartCanvas;
+      if (!canvas || !canvas.width) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of this.chartStrokes) this._chartDrawStroke(s);
+    },
+
+    chartUndo() {
+      if (this.chartStrokes.length === 0) return;
+      this.chartStrokes.pop();
+      this.data.bodyChart = [...this.chartStrokes];
+      this.chartRedraw();
+    },
+
+    chartClear() {
+      if (this.chartStrokes.length === 0) return;
+      if (!confirm('ลบ markers ทั้งหมด?')) return;
+      this.chartStrokes = [];
+      this.data.bodyChart = [];
+      this.chartRedraw();
     },
 
     voice(field) {

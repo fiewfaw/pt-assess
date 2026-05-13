@@ -68,9 +68,14 @@
             <p x-show="v.data?.intervention" class="text-xs text-slate-400 mt-1 line-clamp-1">
               <span class="font-semibold">Rx:</span> <span x-text="v.data?.intervention"></span>
             </p>
-            <p x-show="v.changes?.length" class="text-xs text-amber-600 mt-1">
-              <span x-text="v.changes?.length"></span> changes from prev
-            </p>
+            <div class="flex gap-2 mt-1 text-xs flex-wrap">
+              <span x-show="v.changes?.length" class="text-amber-600">
+                <span x-text="v.changes?.length"></span> chg
+              </span>
+              <span x-show="v.data?.bodyChart?.length" class="text-sky-600">
+                🗺️ chart (<span x-text="v.data?.bodyChart?.length"></span>)
+              </span>
+            </div>
           </div>
           <span class="text-slate-300 ml-2">›</span>
         </div>
