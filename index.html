@@ -6,412 +6,218 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#0ea5e9" />
-<title>PT Assess — Stroke</title>
+<title>PT Assess — Patients</title>
 <link rel="manifest" href="manifest.json" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="css/style.css" />
+<script src="js/storage.js"></script>
+<script src="js/templates.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 pb-24">
+<body class="bg-slate-50 text-slate-800 pb-20">
 
-<div x-data="assessForm()" x-init="init()" class="max-w-2xl mx-auto px-4 py-4">
+<div x-data="patientList()" x-init="init()" class="max-w-2xl mx-auto px-4 py-4">
 
-  <!-- Top bar -->
-  <header class="sticky top-0 z-20 bg-slate-50/95 backdrop-blur -mx-4 px-4 py-2 border-b border-slate-200 mb-3">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-bold text-sky-700">PT Assess</h1>
-        <p class="text-xs text-slate-500">Stroke template · V0</p>
-      </div>
-      <div class="flex items-center gap-2 text-xs">
-        <span x-show="saved" class="text-emerald-600">✓ saved</span>
-        <span x-show="!saved" class="text-amber-600">● unsaved</span>
-        <span class="text-slate-400" x-text="completion + '%'"></span>
-      </div>
+  <!-- Header -->
+  <header class="flex items-center justify-between mb-4">
+    <div>
+      <h1 class="text-xl font-bold text-sky-700">PT Assess</h1>
+      <p class="text-xs text-slate-500">
+        <span x-text="patients.length"></span> คนไข้ ·
+        <span x-text="storageMode" class="capitalize"></span>
+      </p>
     </div>
-    <div class="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden">
-      <div class="h-full bg-sky-500 transition-all" :style="`width: ${completion}%`"></div>
+    <div class="flex gap-2">
+      <a href="settings.html" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm hover:bg-slate-100">⚙️</a>
     </div>
   </header>
 
-  <!-- Section: Patient Info -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('info')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">👤 ข้อมูลคนไข้</span>
-      <span x-text="open.info ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.info" x-collapse class="px-4 pb-4 space-y-3">
-      <div class="grid grid-cols-2 gap-3">
-        <label class="block">
-          <span class="text-xs text-slate-500">HN</span>
-          <input type="text" inputmode="numeric" x-model="data.hn" class="input" placeholder="12345" />
-        </label>
-        <label class="block">
-          <span class="text-xs text-slate-500">วันที่ตรวจ</span>
-          <input type="date" x-model="data.date" class="input" />
-        </label>
-      </div>
-      <label class="block">
-        <span class="text-xs text-slate-500">ชื่อ-นามสกุล</span>
-        <input type="text" x-model="data.name" class="input" placeholder="นาย ก. ข." />
-      </label>
-      <div class="grid grid-cols-3 gap-3">
-        <label class="block">
-          <span class="text-xs text-slate-500">อายุ</span>
-          <input type="number" x-model="data.age" class="input" placeholder="65" />
-        </label>
-        <label class="block">
-          <span class="text-xs text-slate-500">เพศ</span>
-          <select x-model="data.sex" class="input">
-            <option value="">-</option><option>ชาย</option><option>หญิง</option>
-          </select>
-        </label>
-        <label class="block">
-          <span class="text-xs text-slate-500">ถนัด</span>
-          <select x-model="data.dominant" class="input">
-            <option value="">-</option><option>R</option><option>L</option>
-          </select>
-        </label>
-      </div>
-      <label class="block">
-        <span class="text-xs text-slate-500">Diagnosis</span>
-        <input type="text" x-model="data.dx" class="input" placeholder="L MCA infarction, R hemiparesis, onset 2 wks" />
-      </label>
-      <div class="grid grid-cols-2 gap-3">
-        <label class="block">
-          <span class="text-xs text-slate-500">ข้างที่อ่อนแรง</span>
-          <select x-model="data.affectedSide" class="input">
-            <option value="">-</option><option>R</option><option>L</option><option>bilateral</option>
-          </select>
-        </label>
-        <label class="block">
-          <span class="text-xs text-slate-500">ระยะ (วัน)</span>
-          <input type="number" x-model="data.onsetDays" class="input" placeholder="14" />
-        </label>
-      </div>
-      <label class="block">
-        <span class="text-xs text-slate-500">Chief complaint</span>
-        <div class="relative">
-          <textarea x-model="data.cc" class="input min-h-[60px]" placeholder="แขนขาขวาอ่อนแรง 2 สัปดาห์..."></textarea>
-          <button @click="voice('cc')" class="absolute right-2 top-2 text-xs btn-mic">🎤</button>
-        </div>
-      </label>
-    </div>
-  </section>
+  <!-- Search -->
+  <div class="mb-3">
+    <input type="search" x-model="search" placeholder="ค้นหา HN / ชื่อ / dx..." class="input" />
+  </div>
 
-  <!-- Section: Vital Signs -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('vs')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🩺 Vital signs</span>
-      <span x-text="open.vs ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.vs" x-collapse class="px-4 pb-4">
-      <div class="grid grid-cols-2 gap-3">
-        <label><span class="text-xs text-slate-500">BP (mmHg)</span>
-          <input type="text" x-model="data.bp" class="input" placeholder="130/80" /></label>
-        <label><span class="text-xs text-slate-500">HR (bpm)</span>
-          <input type="number" x-model="data.hr" class="input" placeholder="78" /></label>
-        <label><span class="text-xs text-slate-500">RR</span>
-          <input type="number" x-model="data.rr" class="input" placeholder="18" /></label>
-        <label><span class="text-xs text-slate-500">SpO₂ (%)</span>
-          <input type="number" x-model="data.spo2" class="input" placeholder="98" /></label>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section: Consciousness / Cognition -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('cog')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🧠 Consciousness / Cognition</span>
-      <span x-text="open.cog ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.cog" x-collapse class="px-4 pb-4 space-y-3">
-      <div>
-        <span class="text-xs text-slate-500">Consciousness</span>
-        <div class="flex flex-wrap gap-2 mt-1">
-          <template x-for="opt in ['Alert','Drowsy','Stupor','Coma']">
-            <button type="button" @click="data.consciousness = opt"
-              :class="data.consciousness === opt ? 'chip-on' : 'chip'" x-text="opt"></button>
-          </template>
-        </div>
-      </div>
-      <div>
-        <span class="text-xs text-slate-500">Orientation (✓ if correct)</span>
-        <div class="flex flex-wrap gap-2 mt-1">
-          <template x-for="(label, key) in {person:'Person',place:'Place',time:'Time'}">
-            <label class="chip-check">
-              <input type="checkbox" x-model="data.orient[key]" />
-              <span x-text="label"></span>
-            </label>
-          </template>
-        </div>
-      </div>
-      <label class="block">
-        <span class="text-xs text-slate-500">Cognition / Communication notes</span>
-        <textarea x-model="data.cognitionNote" class="input min-h-[50px]" placeholder="aphasia? dysarthria? attention?"></textarea>
-      </label>
-    </div>
-  </section>
-
-  <!-- Section: Motor - Brunnstrom -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('brun')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">💪 Brunnstrom Stage (1-6)</span>
-      <span x-text="open.brun ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.brun" x-collapse class="px-4 pb-4 space-y-3">
-      <template x-for="part in ['UE','Hand','LE']">
-        <div>
-          <span class="text-xs text-slate-500" x-text="part + ' (affected side)'"></span>
-          <div class="flex gap-2 mt-1">
-            <template x-for="n in [1,2,3,4,5,6]">
-              <button type="button" @click="data.brunnstrom[part] = n"
-                :class="data.brunnstrom[part] === n ? 'stage-on' : 'stage'"
-                x-text="n"></button>
-            </template>
+  <!-- Patient list -->
+  <div class="space-y-2">
+    <template x-for="p in filteredPatients" :key="p.hn">
+      <a :href="`patient.html?hn=${p.hn}`" class="block bg-white rounded-xl border border-slate-200 p-3 hover:border-sky-300 transition">
+        <div class="flex justify-between items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold" x-text="`${p.firstName || '-'} ${p.lastInitial || ''}.`"></span>
+              <span class="text-xs text-slate-500" x-text="`HN ${p.hn}`"></span>
+            </div>
+            <p class="text-sm text-slate-600 mt-0.5 truncate" x-text="p.dx || 'ไม่มี dx'"></p>
+            <p class="text-xs text-slate-400 mt-1">
+              <span x-text="`${Templates[p.template]?.icon || ''} ${Templates[p.template]?.name || ''}`"></span>
+              <span x-show="p.lastVisitDate"> · last visit <span x-text="p.lastVisitDate"></span></span>
+              <span x-show="p.visitCount"> · <span x-text="p.visitCount"></span> visits</span>
+            </p>
           </div>
+          <span class="text-slate-300">›</span>
         </div>
-      </template>
-      <p class="text-xs text-slate-400 leading-relaxed">
-        1=flaccid · 2=synergy starts · 3=spasticity peak · 4=synergy breaks · 5=isolated movement · 6=normal
-      </p>
-    </div>
-  </section>
+      </a>
+    </template>
 
-  <!-- Section: Tone - MAS -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('mas')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">⚡ Tone — Modified Ashworth (MAS)</span>
-      <span x-text="open.mas ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.mas" x-collapse class="px-4 pb-4 space-y-2">
-      <p class="text-xs text-slate-400">0 · 1 · 1+ · 2 · 3 · 4</p>
-      <template x-for="joint in ['Shoulder flex','Elbow flex','Wrist flex','Hip flex','Knee ext','Ankle PF']">
-        <div class="flex items-center gap-2">
-          <span class="text-sm w-32 shrink-0" x-text="joint"></span>
-          <div class="flex gap-1 flex-1 flex-wrap">
-            <template x-for="v in ['0','1','1+','2','3','4']">
-              <button type="button" @click="data.mas[joint] = v"
-                :class="data.mas[joint] === v ? 'pill-on' : 'pill'"
-                x-text="v"></button>
-            </template>
-          </div>
-        </div>
-      </template>
+    <div x-show="patients.length === 0" class="text-center py-12 text-slate-400">
+      <p class="text-4xl mb-2">📋</p>
+      <p>ยังไม่มีคนไข้</p>
+      <p class="text-xs mt-1">กดปุ่ม + ด้านล่างเพื่อเพิ่ม</p>
     </div>
-  </section>
-
-  <!-- Section: MMT -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('mmt')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🏋️ MMT (key muscles, R/L)</span>
-      <span x-text="open.mmt ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.mmt" x-collapse class="px-4 pb-4 space-y-2">
-      <p class="text-xs text-slate-400">0 · 1 · 2 · 3 · 3+ · 4 · 5</p>
-      <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center text-xs font-semibold text-slate-500">
-        <span>Muscle</span><span class="w-10 text-center">R</span><span class="w-10 text-center">L</span>
-      </div>
-      <template x-for="m in ['Shoulder abd','Elbow flex','Elbow ext','Wrist ext','Hand grip','Hip flex','Knee ext','Ankle DF','Ankle PF']">
-        <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
-          <span class="text-sm" x-text="m"></span>
-          <select x-model="data.mmt[m + '_R']" class="input w-16 text-center text-sm">
-            <option value="">-</option>
-            <option>0</option><option>1</option><option>2</option><option>3</option>
-            <option>3+</option><option>4</option><option>5</option>
-          </select>
-          <select x-model="data.mmt[m + '_L']" class="input w-16 text-center text-sm">
-            <option value="">-</option>
-            <option>0</option><option>1</option><option>2</option><option>3</option>
-            <option>3+</option><option>4</option><option>5</option>
-          </select>
-        </div>
-      </template>
-    </div>
-  </section>
-
-  <!-- Section: Sensation -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('sens')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">✋ Sensation</span>
-      <span x-text="open.sens ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.sens" x-collapse class="px-4 pb-4 space-y-2">
-      <p class="text-xs text-slate-400">✓ intact · ~ impaired · ✗ absent</p>
-      <template x-for="area in ['Face','UE prox','UE dist','Hand','LE prox','LE dist','Foot','Trunk']">
-        <div class="flex items-center gap-2">
-          <span class="text-sm w-24 shrink-0" x-text="area"></span>
-          <div class="flex gap-1 flex-1">
-            <template x-for="v in ['✓','~','✗']">
-              <button type="button" @click="data.sensation[area] = v"
-                :class="data.sensation[area] === v ? 'pill-on' : 'pill'"
-                x-text="v" class="flex-1"></button>
-            </template>
-          </div>
-        </div>
-      </template>
-      <div class="grid grid-cols-2 gap-3 mt-3">
-        <label><span class="text-xs text-slate-500">Proprioception</span>
-          <select x-model="data.proprioception" class="input">
-            <option value="">-</option>
-            <option>Intact</option><option>Impaired</option><option>Absent</option>
-          </select>
-        </label>
-        <label><span class="text-xs text-slate-500">Stereognosis</span>
-          <select x-model="data.stereognosis" class="input">
-            <option value="">-</option>
-            <option>Intact</option><option>Impaired</option><option>Absent</option>
-          </select>
-        </label>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section: Balance -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('bal')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">⚖️ Balance</span>
-      <span x-text="open.bal ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.bal" x-collapse class="px-4 pb-4 space-y-3">
-      <template x-for="item in ['Sit static','Sit dynamic','Stand static','Stand dynamic']">
-        <div>
-          <span class="text-sm" x-text="item"></span>
-          <div class="flex gap-1 mt-1">
-            <template x-for="v in ['Poor','Fair','Good','Normal']">
-              <button type="button" @click="data.balance[item] = v"
-                :class="data.balance[item] === v ? 'pill-on' : 'pill'"
-                x-text="v" class="flex-1"></button>
-            </template>
-          </div>
-        </div>
-      </template>
-      <label class="block">
-        <span class="text-xs text-slate-500">Berg Balance Scale (0-56) — optional</span>
-        <input type="number" x-model="data.bbs" class="input" min="0" max="56" placeholder="34" />
-      </label>
-    </div>
-  </section>
-
-  <!-- Section: Mobility -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('mob')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🚶 Mobility / Function</span>
-      <span x-text="open.mob ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.mob" x-collapse class="px-4 pb-4 space-y-2">
-      <p class="text-xs text-slate-400">I · S · MinA · ModA · MaxA · D</p>
-      <template x-for="task in ['Rolling','Supine→Sit','Sit→Stand','Transfer','Standing','Ambulation','Stairs']">
-        <div class="flex items-center gap-2">
-          <span class="text-sm w-28 shrink-0" x-text="task"></span>
-          <div class="flex gap-1 flex-1">
-            <template x-for="v in ['I','S','MinA','ModA','MaxA','D']">
-              <button type="button" @click="data.mobility[task] = v"
-                :class="data.mobility[task] === v ? 'pill-on' : 'pill'"
-                x-text="v" class="flex-1 text-xs"></button>
-            </template>
-          </div>
-        </div>
-      </template>
-      <label class="block">
-        <span class="text-xs text-slate-500">Gait pattern / aids</span>
-        <input type="text" x-model="data.gait" class="input" placeholder="circumduction, walker, foot drop..." />
-      </label>
-    </div>
-  </section>
-
-  <!-- Section: Barthel Index -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('bi')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🏠 Barthel Index <span class="text-xs text-sky-600 font-normal" x-text="'(' + bi_total + '/100)'"></span></span>
-      <span x-text="open.bi ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.bi" x-collapse class="px-4 pb-4 space-y-2">
-      <template x-for="item in bi_items" :key="item.key">
-        <div>
-          <span class="text-sm" x-text="item.label"></span>
-          <div class="flex gap-1 mt-1 flex-wrap">
-            <template x-for="opt in item.opts">
-              <button type="button" @click="data.bi[item.key] = opt.v"
-                :class="data.bi[item.key] === opt.v ? 'pill-on' : 'pill'"
-                x-text="opt.v + ' ' + opt.label" class="text-xs"></button>
-            </template>
-          </div>
-        </div>
-      </template>
-    </div>
-  </section>
-
-  <!-- Section: Special Tests -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('special')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🔍 Special findings</span>
-      <span x-text="open.special ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.special" x-collapse class="px-4 pb-4 space-y-2">
-      <template x-for="(label, key) in {sublux:'Shoulder subluxation', pusher:'Pusher syndrome', neglect:'Hemineglect', aphasia:'Aphasia', dysphagia:'Dysphagia', drop:'Foot drop', contracture:'Contracture'}">
-        <label class="chip-check">
-          <input type="checkbox" x-model="data.special[key]" />
-          <span x-text="label"></span>
-        </label>
-      </template>
-      <label class="block mt-2">
-        <span class="text-xs text-slate-500">Other findings</span>
-        <textarea x-model="data.otherFindings" class="input min-h-[60px]"></textarea>
-      </label>
-    </div>
-  </section>
-
-  <!-- Section: Plan / Goals -->
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
-    <button @click="toggle('plan')" class="w-full px-4 py-3 flex justify-between items-center text-left">
-      <span class="font-semibold">🎯 Goals & Plan</span>
-      <span x-text="open.plan ? '▾' : '▸'" class="text-slate-400"></span>
-    </button>
-    <div x-show="open.plan" x-collapse class="px-4 pb-4 space-y-3">
-      <label class="block">
-        <span class="text-xs text-slate-500">Short-term goals (2-4 wks)</span>
-        <div class="relative">
-          <textarea x-model="data.stg" class="input min-h-[70px]" placeholder="1. Sit balance Good ภายใน 2 wk\n2. Transfer w/ MinA"></textarea>
-          <button @click="voice('stg')" class="absolute right-2 top-2 btn-mic">🎤</button>
-        </div>
-      </label>
-      <label class="block">
-        <span class="text-xs text-slate-500">Long-term goals (8-12 wks)</span>
-        <div class="relative">
-          <textarea x-model="data.ltg" class="input min-h-[70px]" placeholder="1. Independent ambulation w/ cane 50m\n2. ADL BI 80+"></textarea>
-          <button @click="voice('ltg')" class="absolute right-2 top-2 btn-mic">🎤</button>
-        </div>
-      </label>
-      <label class="block">
-        <span class="text-xs text-slate-500">Temporary treatment plan (today)</span>
-        <div class="relative">
-          <textarea x-model="data.plan" class="input min-h-[80px]" placeholder="- PROM UE/LE\n- Sit balance training\n- Transfer practice MinA→Sup"></textarea>
-          <button @click="voice('plan')" class="absolute right-2 top-2 btn-mic">🎤</button>
-        </div>
-      </label>
-    </div>
-  </section>
-
-  <!-- Sticky action bar -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 z-30">
-    <div class="max-w-2xl mx-auto flex gap-2">
-      <button @click="save()" class="flex-1 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold py-3 rounded-lg">
-        💾 Save
-      </button>
-      <button @click="exportJSON()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold py-3 rounded-lg">
-        📤 Export
-      </button>
-      <button @click="reset()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg">
-        ↻
-      </button>
+    <div x-show="patients.length > 0 && filteredPatients.length === 0" class="text-center py-8 text-slate-400">
+      ไม่พบคนไข้ที่ตรงกับ "<span x-text="search"></span>"
     </div>
   </div>
 
+  <!-- New Patient Modal -->
+  <div x-show="newOpen" x-cloak class="fixed inset-0 bg-slate-900/50 z-40 flex items-end sm:items-center justify-center p-4"
+       @click.self="newOpen = false">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-3 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold">เพิ่มคนไข้ใหม่</h2>
+        <button @click="newOpen = false" class="text-slate-400 hover:text-slate-700 text-xl">✕</button>
+      </div>
+
+      <label class="block">
+        <span class="text-xs text-slate-500">HN <span class="text-red-500">*</span></span>
+        <input type="text" inputmode="numeric" x-model="newPatient.hn" class="input" placeholder="12345" />
+      </label>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label><span class="text-xs text-slate-500">ชื่อ <span class="text-red-500">*</span></span>
+          <input type="text" x-model="newPatient.firstName" class="input" placeholder="ก." /></label>
+        <label><span class="text-xs text-slate-500">นามสกุล (อักษรย่อ)</span>
+          <input type="text" x-model="newPatient.lastInitial" class="input" placeholder="ข" /></label>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <label><span class="text-xs text-slate-500">อายุ</span>
+          <input type="number" x-model="newPatient.age" class="input" placeholder="65" /></label>
+        <label><span class="text-xs text-slate-500">เพศ</span>
+          <select x-model="newPatient.sex" class="input">
+            <option value="">-</option><option>ชาย</option><option>หญิง</option>
+          </select></label>
+        <label><span class="text-xs text-slate-500">ถนัด</span>
+          <select x-model="newPatient.dominantSide" class="input">
+            <option value="">-</option><option>R</option><option>L</option>
+          </select></label>
+      </div>
+
+      <label class="block">
+        <span class="text-xs text-slate-500">Diagnosis</span>
+        <input type="text" x-model="newPatient.dx" class="input" placeholder="L MCA infarct, R hemiparesis" />
+      </label>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label><span class="text-xs text-slate-500">ข้างที่อ่อนแรง</span>
+          <select x-model="newPatient.affectedSide" class="input">
+            <option value="">-</option><option>R</option><option>L</option><option>bilateral</option>
+          </select></label>
+        <label><span class="text-xs text-slate-500">วัน onset</span>
+          <input type="date" x-model="newPatient.onsetDate" class="input" /></label>
+      </div>
+
+      <div>
+        <span class="text-xs text-slate-500">Template</span>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <template x-for="t in Object.values(Templates).filter(x => !x.stub && !x.custom)">
+            <button type="button" @click="newPatient.template = t.id"
+              :class="newPatient.template === t.id ? 'chip-on' : 'chip'"
+              class="text-left">
+              <span x-text="`${t.icon} ${t.name}`"></span>
+            </button>
+          </template>
+          <template x-for="t in Object.values(Templates).filter(x => x.stub || x.custom)">
+            <button type="button" @click="newPatient.template = t.id"
+              :class="newPatient.template === t.id ? 'chip-on' : 'chip'"
+              class="text-left opacity-60">
+              <span x-text="`${t.icon} ${t.name}${t.stub ? ' (soon)' : ''}`"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button @click="newOpen = false" class="flex-1 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">ยกเลิก</button>
+        <button @click="createPatient()" class="flex-1 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700">สร้าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAB: New Patient -->
+  <button @click="openNew()" class="fixed bottom-6 right-6 z-30 w-14 h-14 bg-sky-600 hover:bg-sky-700 text-white rounded-full shadow-lg text-2xl">+</button>
+
 </div>
 
-<script src="js/form.js"></script>
+<script>
+function patientList() {
+  return {
+    patients: [],
+    search: '',
+    newOpen: false,
+    storageMode: 'local',
+    Templates: window.Templates,
+    newPatient: this.blankPatient(),
+
+    blankPatient() {
+      return {
+        hn: '', firstName: '', lastInitial: '', age: '', sex: '',
+        dominantSide: '', dx: '', affectedSide: '', onsetDate: '',
+        template: 'stroke',
+      };
+    },
+
+    async init() {
+      const storage = window.Storage.get();
+      this.storageMode = storage.name;
+      const patients = await storage.listPatients();
+      // Enrich with visit info
+      for (const p of patients) {
+        const visits = await storage.listVisits(p.hn);
+        p.visitCount = visits.length;
+        p.lastVisitDate = visits[0]?.visitDate || null;
+      }
+      this.patients = patients.sort((a, b) => {
+        if (a.lastVisitDate && b.lastVisitDate) return b.lastVisitDate.localeCompare(a.lastVisitDate);
+        return (b.updatedAt || '').localeCompare(a.updatedAt || '');
+      });
+    },
+
+    openNew() {
+      this.newPatient = this.blankPatient();
+      this.newOpen = true;
+    },
+
+    get filteredPatients() {
+      if (!this.search) return this.patients;
+      const q = this.search.toLowerCase();
+      return this.patients.filter(p =>
+        (p.hn || '').toLowerCase().includes(q) ||
+        (p.firstName || '').toLowerCase().includes(q) ||
+        (p.lastInitial || '').toLowerCase().includes(q) ||
+        (p.dx || '').toLowerCase().includes(q)
+      );
+    },
+
+    async createPatient() {
+      if (!this.newPatient.hn || !this.newPatient.firstName) {
+        alert('กรอก HN และชื่อ');
+        return;
+      }
+      const storage = window.Storage.get();
+      const existing = await storage.getPatient(this.newPatient.hn);
+      if (existing) {
+        if (!confirm(`HN ${this.newPatient.hn} มีอยู่แล้ว (${existing.firstName}) — เขียนทับ?`)) return;
+      }
+      await storage.savePatient(this.newPatient);
+      this.newOpen = false;
+      // Navigate to patient page
+      window.location.href = `patient.html?hn=${this.newPatient.hn}`;
+    },
+  };
+}
+</script>
+
 </body>
 </html>

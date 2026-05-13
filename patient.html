@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0ea5e9" />
+<title>Patient — PT Assess</title>
+<link rel="manifest" href="manifest.json" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/storage.js"></script>
+<script src="js/templates.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-20">
+
+<div x-data="patientDetail()" x-init="init()" class="max-w-2xl mx-auto px-4 py-4">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between mb-4">
+    <a href="index.html" class="text-slate-500 hover:text-slate-700">← Patients</a>
+    <button @click="editOpen = true" class="text-sm text-sky-600 hover:underline">แก้ไข</button>
+  </header>
+
+  <!-- Patient card -->
+  <div x-show="patient" class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-xl font-bold" x-text="patient ? `${patient.firstName} ${patient.lastInitial}.` : ''"></h1>
+        <p class="text-sm text-slate-500">
+          HN <span x-text="patient?.hn"></span> ·
+          <span x-text="patient?.age"></span> y/o <span x-text="patient?.sex"></span> ·
+          dom <span x-text="patient?.dominantSide || '-'"></span>
+        </p>
+      </div>
+      <span class="px-2 py-1 rounded-md bg-sky-50 text-sky-700 text-xs">
+        <span x-text="`${Templates[patient?.template]?.icon || ''} ${Templates[patient?.template]?.name || ''}`"></span>
+      </span>
+    </div>
+    <p class="text-sm mt-2" x-text="patient?.dx"></p>
+    <p class="text-xs text-slate-500 mt-1">
+      <span x-show="patient?.affectedSide">Affected: <span x-text="patient?.affectedSide"></span> · </span>
+      <span x-show="patient?.onsetDate">Onset: <span x-text="patient?.onsetDate"></span></span>
+    </p>
+  </div>
+
+  <!-- Visit list header -->
+  <div class="flex justify-between items-center mb-2">
+    <h2 class="font-semibold">📅 Visits (<span x-text="visits.length"></span>)</h2>
+    <a :href="`visit.html?hn=${hn}&new=1`" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">+ Visit ใหม่</a>
+  </div>
+
+  <!-- Visit list -->
+  <div class="space-y-2">
+    <template x-for="(v, idx) in visits" :key="v.visitId">
+      <a :href="`visit.html?hn=${hn}&v=${v.visitId}`" class="block bg-white rounded-xl border border-slate-200 p-3 hover:border-sky-300">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold">Visit #<span x-text="v.visitId"></span></span>
+              <span class="text-sm text-slate-500" x-text="v.visitDate"></span>
+              <span x-show="idx === 0" class="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">ล่าสุด</span>
+            </div>
+            <p x-show="v.data?.cc" class="text-sm text-slate-600 mt-1 line-clamp-2" x-text="v.data?.cc"></p>
+            <p x-show="v.data?.intervention" class="text-xs text-slate-400 mt-1 line-clamp-1">
+              <span class="font-semibold">Rx:</span> <span x-text="v.data?.intervention"></span>
+            </p>
+            <p x-show="v.changes?.length" class="text-xs text-amber-600 mt-1">
+              <span x-text="v.changes?.length"></span> changes from prev
+            </p>
+          </div>
+          <span class="text-slate-300 ml-2">›</span>
+        </div>
+      </a>
+    </template>
+
+    <div x-show="visits.length === 0" class="text-center py-12 text-slate-400">
+      <p class="text-4xl mb-2">📅</p>
+      <p>ยังไม่มี visit</p>
+      <p class="text-xs mt-1">กดปุ่ม "+ Visit ใหม่" เพื่อสร้าง</p>
+    </div>
+  </div>
+
+  <!-- Edit Patient Modal -->
+  <div x-show="editOpen" x-cloak class="fixed inset-0 bg-slate-900/50 z-40 flex items-end sm:items-center justify-center p-4"
+       @click.self="editOpen = false">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-3 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold">แก้ไขข้อมูลคนไข้</h2>
+        <button @click="editOpen = false" class="text-slate-400 text-xl">✕</button>
+      </div>
+      <label><span class="text-xs text-slate-500">HN</span>
+        <input type="text" x-model="patient.hn" class="input" disabled /></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label><span class="text-xs text-slate-500">ชื่อ</span>
+          <input type="text" x-model="patient.firstName" class="input" /></label>
+        <label><span class="text-xs text-slate-500">อักษรย่อนามสกุล</span>
+          <input type="text" x-model="patient.lastInitial" class="input" /></label>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <label><span class="text-xs text-slate-500">อายุ</span>
+          <input type="number" x-model="patient.age" class="input" /></label>
+        <label><span class="text-xs text-slate-500">เพศ</span>
+          <select x-model="patient.sex" class="input">
+            <option value="">-</option><option>ชาย</option><option>หญิง</option>
+          </select></label>
+        <label><span class="text-xs text-slate-500">ถนัด</span>
+          <select x-model="patient.dominantSide" class="input">
+            <option value="">-</option><option>R</option><option>L</option>
+          </select></label>
+      </div>
+      <label class="block"><span class="text-xs text-slate-500">Dx</span>
+        <input type="text" x-model="patient.dx" class="input" /></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label><span class="text-xs text-slate-500">Affected side</span>
+          <select x-model="patient.affectedSide" class="input">
+            <option value="">-</option><option>R</option><option>L</option><option>bilateral</option>
+          </select></label>
+        <label><span class="text-xs text-slate-500">Onset</span>
+          <input type="date" x-model="patient.onsetDate" class="input" /></label>
+      </div>
+      <div class="pt-2 flex gap-2">
+        <button @click="confirmDelete()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm">ลบ</button>
+        <button @click="editOpen = false" class="flex-1 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">ยกเลิก</button>
+        <button @click="savePatient()" class="flex-1 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function patientDetail() {
+  return {
+    hn: '',
+    patient: null,
+    visits: [],
+    editOpen: false,
+    Templates: window.Templates,
+
+    async init() {
+      const params = new URLSearchParams(location.search);
+      this.hn = params.get('hn');
+      if (!this.hn) { location.href = 'index.html'; return; }
+
+      const storage = window.Storage.get();
+      this.patient = await storage.getPatient(this.hn);
+      if (!this.patient) {
+        alert('ไม่พบคนไข้ HN ' + this.hn);
+        location.href = 'index.html';
+        return;
+      }
+      this.visits = await storage.listVisits(this.hn);
+    },
+
+    async savePatient() {
+      const storage = window.Storage.get();
+      await storage.savePatient(this.patient);
+      this.editOpen = false;
+    },
+
+    async confirmDelete() {
+      if (!confirm(`ลบคนไข้ HN ${this.hn} และ visits ทั้งหมด?`)) return;
+      const storage = window.Storage.get();
+      await storage.deletePatient(this.hn);
+      location.href = 'index.html';
+    },
+  };
+}
+</script>
+
+</body>
+</html>

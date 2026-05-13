@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#0ea5e9" />
+<title>Visit — PT Assess</title>
+<link rel="manifest" href="manifest.json" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/storage.js"></script>
+<script src="js/templates.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24">
+
+<div x-data="visitForm()" x-init="init()" class="max-w-2xl mx-auto px-4 py-4">
+
+  <!-- Top bar -->
+  <header class="sticky top-0 z-20 bg-slate-50/95 backdrop-blur -mx-4 px-4 py-2 border-b border-slate-200 mb-3">
+    <div class="flex items-center justify-between">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <a :href="`patient.html?hn=${hn}`" class="text-slate-400 hover:text-slate-700">←</a>
+          <h1 class="text-base font-bold text-sky-700 truncate" x-text="patient ? `${patient.firstName} ${patient.lastInitial}.` : 'New patient'"></h1>
+        </div>
+        <p class="text-xs text-slate-500">
+          <span x-text="patient?.hn || 'HN ?'"></span> ·
+          Visit <span x-text="visitNumber"></span> ·
+          <span x-text="data.date"></span>
+          <span x-show="prevVisit" class="text-slate-400"> · prev <span x-text="prevVisit?.visitDate"></span></span>
+        </p>
+      </div>
+      <div class="flex items-center gap-2 text-xs ml-2">
+        <span x-show="changedCount > 0" class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold" x-text="`${changedCount} chg`"></span>
+        <span x-show="saved" class="text-emerald-600">✓</span>
+        <span x-show="!saved" class="text-amber-600">●</span>
+      </div>
+    </div>
+    <div class="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden">
+      <div class="h-full bg-sky-500 transition-all" :style="`width: ${completion}%`"></div>
+    </div>
+  </header>
+
+  <!-- Template indicator -->
+  <div class="mb-3 text-xs text-slate-500 flex items-center gap-2">
+    <span class="px-2 py-1 rounded-md bg-white border border-slate-200" x-text="`${templateInfo?.icon || ''} ${templateInfo?.name || 'Stroke'}`"></span>
+    <span x-show="prevVisit" class="text-slate-400">· เปรียบกับ visit ก่อน · ตัวเลขสีจาง = ค่าเดิม</span>
+  </div>
+
+  <!-- Sections - sequential, all visible -->
+  <template x-for="sec in sections" :key="sec">
+    <div>
+      <!-- Section: Patient Info -->
+      <section x-show="sec === 'info'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('info')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">👤 ข้อมูล Visit</span>
+          <span x-text="open.info ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.info" x-collapse class="px-4 pb-4 space-y-3">
+          <label class="block">
+            <span class="text-xs text-slate-500">วันที่ตรวจ</span>
+            <input type="date" x-model="data.date" class="input" />
+          </label>
+          <label class="block">
+            <span class="text-xs text-slate-500">Subjective / Chief complaint วันนี้</span>
+            <div class="relative">
+              <textarea x-model="data.cc" class="input min-h-[60px]" placeholder="คนไข้บ่นวันนี้..."></textarea>
+              <button @click="voice('cc')" class="absolute right-2 top-2 btn-mic">🎤</button>
+            </div>
+            <span x-show="prevValue('cc')" class="text-xs text-slate-400 mt-1 block" x-text="`prev: ${prevValue('cc')}`"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Vital Signs -->
+      <section x-show="sec === 'vs'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('vs')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🩺 Vital signs</span>
+          <span x-text="open.vs ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.vs" x-collapse class="px-4 pb-4">
+          <div class="grid grid-cols-2 gap-3">
+            <label><span class="text-xs text-slate-500">BP <span class="text-slate-400" x-text="prevValue('bp') ? `(prev ${prevValue('bp')})` : ''"></span></span>
+              <input type="text" x-model="data.bp" class="input" :class="changedClass('bp')" placeholder="130/80" /></label>
+            <label><span class="text-xs text-slate-500">HR <span class="text-slate-400" x-text="prevValue('hr') ? `(prev ${prevValue('hr')})` : ''"></span></span>
+              <input type="number" x-model="data.hr" class="input" :class="changedClass('hr')" placeholder="78" /></label>
+            <label><span class="text-xs text-slate-500">RR <span class="text-slate-400" x-text="prevValue('rr') ? `(prev ${prevValue('rr')})` : ''"></span></span>
+              <input type="number" x-model="data.rr" class="input" :class="changedClass('rr')" placeholder="18" /></label>
+            <label><span class="text-xs text-slate-500">SpO₂ <span class="text-slate-400" x-text="prevValue('spo2') ? `(prev ${prevValue('spo2')})` : ''"></span></span>
+              <input type="number" x-model="data.spo2" class="input" :class="changedClass('spo2')" placeholder="98" /></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Consciousness / Cognition -->
+      <section x-show="sec === 'cog'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('cog')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🧠 Consciousness</span>
+          <span x-text="open.cog ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.cog" x-collapse class="px-4 pb-4 space-y-3">
+          <div>
+            <span class="text-xs text-slate-500">Consciousness <span class="text-slate-400" x-text="prevValue('consciousness') ? `(prev ${prevValue('consciousness')})` : ''"></span></span>
+            <div class="flex flex-wrap gap-2 mt-1">
+              <template x-for="opt in ['Alert','Drowsy','Stupor','Coma']">
+                <button type="button" @click="data.consciousness = opt"
+                  :class="data.consciousness === opt ? 'chip-on' : 'chip'" x-text="opt"></button>
+              </template>
+            </div>
+          </div>
+          <label class="block">
+            <span class="text-xs text-slate-500">Cognition / Communication notes</span>
+            <textarea x-model="data.cognitionNote" class="input min-h-[50px]" :class="changedClass('cognitionNote')"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Brunnstrom -->
+      <section x-show="sec === 'brun'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('brun')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">💪 Brunnstrom Stage</span>
+          <span x-text="open.brun ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.brun" x-collapse class="px-4 pb-4 space-y-3">
+          <template x-for="part in ['UE','Hand','LE']">
+            <div>
+              <span class="text-xs text-slate-500" x-text="`${part} (affected) ${prevValue(['brunnstrom', part]) ? '· prev ' + prevValue(['brunnstrom', part]) : ''}`"></span>
+              <div class="flex gap-2 mt-1">
+                <template x-for="n in [1,2,3,4,5,6]">
+                  <button type="button" @click="data.brunnstrom[part] = n"
+                    :class="stageClass(part, n)" x-text="n"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: MAS -->
+      <section x-show="sec === 'mas'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('mas')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">⚡ MAS</span>
+          <span x-text="open.mas ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.mas" x-collapse class="px-4 pb-4 space-y-2">
+          <p class="text-xs text-slate-400">0 · 1 · 1+ · 2 · 3 · 4</p>
+          <template x-for="joint in ['Shoulder flex','Elbow flex','Wrist flex','Hip flex','Knee ext','Ankle PF']">
+            <div class="flex items-center gap-2">
+              <span class="text-sm w-28 shrink-0 flex flex-col">
+                <span x-text="joint"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['mas', joint]) ? 'prev ' + prevValue(['mas', joint]) : ''"></span>
+              </span>
+              <div class="flex gap-1 flex-1 flex-wrap">
+                <template x-for="v in ['0','1','1+','2','3','4']">
+                  <button type="button" @click="data.mas[joint] = v"
+                    :class="pillClass(['mas', joint], v)" x-text="v"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: MMT -->
+      <section x-show="sec === 'mmt'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('mmt')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🏋️ MMT (R/L)</span>
+          <span x-text="open.mmt ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.mmt" x-collapse class="px-4 pb-4 space-y-2">
+          <p class="text-xs text-slate-400">0 · 1 · 2 · 3 · 3+ · 4 · 5</p>
+          <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center text-xs font-semibold text-slate-500">
+            <span>Muscle</span><span class="w-16 text-center">R</span><span class="w-16 text-center">L</span>
+          </div>
+          <template x-for="m in ['Shoulder abd','Elbow flex','Elbow ext','Wrist ext','Hand grip','Hip flex','Knee ext','Ankle DF','Ankle PF']">
+            <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+              <span class="text-sm flex flex-col">
+                <span x-text="m"></span>
+                <span class="text-xs text-slate-400">
+                  <span x-text="prevValue(['mmt', m + '_R']) ? 'R:' + prevValue(['mmt', m + '_R']) : ''"></span>
+                  <span x-text="prevValue(['mmt', m + '_L']) ? ' L:' + prevValue(['mmt', m + '_L']) : ''"></span>
+                </span>
+              </span>
+              <select x-model="data.mmt[m + '_R']" class="input w-16 text-center text-sm" :class="changedClass(['mmt', m + '_R'])">
+                <option value="">-</option>
+                <option>0</option><option>1</option><option>2</option><option>3</option>
+                <option>3+</option><option>4</option><option>5</option>
+              </select>
+              <select x-model="data.mmt[m + '_L']" class="input w-16 text-center text-sm" :class="changedClass(['mmt', m + '_L'])">
+                <option value="">-</option>
+                <option>0</option><option>1</option><option>2</option><option>3</option>
+                <option>3+</option><option>4</option><option>5</option>
+              </select>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Sensation -->
+      <section x-show="sec === 'sens'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('sens')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">✋ Sensation</span>
+          <span x-text="open.sens ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.sens" x-collapse class="px-4 pb-4 space-y-2">
+          <p class="text-xs text-slate-400">✓ intact · ~ impaired · ✗ absent</p>
+          <template x-for="area in ['Face','UE prox','UE dist','Hand','LE prox','LE dist','Foot','Trunk']">
+            <div class="flex items-center gap-2">
+              <span class="text-sm w-24 shrink-0 flex flex-col">
+                <span x-text="area"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['sensation', area]) ? 'prev ' + prevValue(['sensation', area]) : ''"></span>
+              </span>
+              <div class="flex gap-1 flex-1">
+                <template x-for="v in ['✓','~','✗']">
+                  <button type="button" @click="data.sensation[area] = v"
+                    :class="pillClass(['sensation', area], v)" x-text="v" class="flex-1"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Balance -->
+      <section x-show="sec === 'bal'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('bal')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">⚖️ Balance</span>
+          <span x-text="open.bal ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.bal" x-collapse class="px-4 pb-4 space-y-3">
+          <template x-for="item in ['Sit static','Sit dynamic','Stand static','Stand dynamic']">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['balance', item]) ? 'prev ' + prevValue(['balance', item]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1">
+                <template x-for="v in ['Poor','Fair','Good','Normal']">
+                  <button type="button" @click="data.balance[item] = v"
+                    :class="pillClass(['balance', item], v)" x-text="v" class="flex-1"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+          <label class="block">
+            <span class="text-xs text-slate-500">Berg Balance Scale (0-56)</span>
+            <input type="number" x-model="data.bbs" class="input" :class="changedClass('bbs')" min="0" max="56" />
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Mobility -->
+      <section x-show="sec === 'mob'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('mob')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🚶 Mobility</span>
+          <span x-text="open.mob ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.mob" x-collapse class="px-4 pb-4 space-y-2">
+          <p class="text-xs text-slate-400">I · S · MinA · ModA · MaxA · D</p>
+          <template x-for="task in ['Rolling','Supine→Sit','Sit→Stand','Transfer','Standing','Ambulation','Stairs']">
+            <div class="flex items-center gap-2">
+              <span class="text-sm w-24 shrink-0 flex flex-col">
+                <span x-text="task"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['mobility', task]) ? 'prev ' + prevValue(['mobility', task]) : ''"></span>
+              </span>
+              <div class="flex gap-1 flex-1">
+                <template x-for="v in ['I','S','MinA','ModA','MaxA','D']">
+                  <button type="button" @click="data.mobility[task] = v"
+                    :class="pillClass(['mobility', task], v)" x-text="v" class="flex-1 text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+          <label class="block">
+            <span class="text-xs text-slate-500">Gait / aids</span>
+            <input type="text" x-model="data.gait" class="input" :class="changedClass('gait')" placeholder="circumduction, walker..." />
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Barthel -->
+      <section x-show="sec === 'bi'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('bi')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🏠 Barthel Index <span class="text-xs text-sky-600 font-normal" x-text="`(${bi_total}/100${prevBI !== null ? ' · prev ' + prevBI : ''})`"></span></span>
+          <span x-text="open.bi ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.bi" x-collapse class="px-4 pb-4 space-y-2">
+          <template x-for="item in bi_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['bi', item.key]) !== null ? 'prev ' + prevValue(['bi', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in item.opts">
+                  <button type="button" @click="data.bi[item.key] = opt.v"
+                    :class="pillClass(['bi', item.key], opt.v)"
+                    x-text="opt.v + ' ' + opt.label" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Special -->
+      <section x-show="sec === 'special'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('special')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🔍 Special findings</span>
+          <span x-text="open.special ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.special" x-collapse class="px-4 pb-4 space-y-2">
+          <template x-for="(label, key) in {sublux:'Shoulder subluxation', pusher:'Pusher syndrome', neglect:'Hemineglect', aphasia:'Aphasia', dysphagia:'Dysphagia', drop:'Foot drop', contracture:'Contracture'}">
+            <label class="chip-check">
+              <input type="checkbox" x-model="data.special[key]" />
+              <span x-text="label"></span>
+              <span x-show="prevValue(['special', key])" class="text-xs text-slate-400">(prev ✓)</span>
+            </label>
+          </template>
+          <label class="block mt-2">
+            <span class="text-xs text-slate-500">Other findings</span>
+            <textarea x-model="data.otherFindings" class="input min-h-[60px]"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Plan / Goals -->
+      <section x-show="sec === 'plan'" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('plan')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🎯 Plan & Notes</span>
+          <span x-text="open.plan ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.plan" x-collapse class="px-4 pb-4 space-y-3">
+          <label class="block">
+            <span class="text-xs text-slate-500">Treatment ที่ทำวันนี้</span>
+            <div class="relative">
+              <textarea x-model="data.intervention" class="input min-h-[70px]" placeholder="- PROM UE/LE\n- Sit balance training x 15 min..."></textarea>
+              <button @click="voice('intervention')" class="absolute right-2 top-2 btn-mic">🎤</button>
+            </div>
+          </label>
+          <label class="block">
+            <span class="text-xs text-slate-500">Plan visit ถัดไป</span>
+            <div class="relative">
+              <textarea x-model="data.plan" class="input min-h-[60px]" placeholder="เน้น..."></textarea>
+              <button @click="voice('plan')" class="absolute right-2 top-2 btn-mic">🎤</button>
+            </div>
+          </label>
+          <label class="block">
+            <span class="text-xs text-slate-500">Notes / Observation อื่น ๆ</span>
+            <textarea x-model="data.notes" class="input min-h-[60px]"></textarea>
+          </label>
+        </div>
+      </section>
+    </div>
+  </template>
+
+  <!-- Sticky action bar -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 z-30">
+    <div class="max-w-2xl mx-auto flex gap-2">
+      <button @click="saveVisit()" class="flex-1 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold py-3 rounded-lg">
+        💾 Save Visit
+      </button>
+      <button @click="exportJSON()" class="px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg" title="Export JSON">
+        📤
+      </button>
+      <a :href="`patient.html?hn=${hn}`" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg flex items-center" title="ยกเลิก">
+        ✕
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/form.js"></script>
+</body>
+</html>

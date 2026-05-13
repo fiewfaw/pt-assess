@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0ea5e9" />
+<title>Settings — PT Assess</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/storage.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<div x-data="settings()" x-init="init()" class="max-w-2xl mx-auto px-4 py-4">
+
+  <header class="flex items-center justify-between mb-4">
+    <a href="index.html" class="text-slate-500">← Back</a>
+    <h1 class="text-xl font-bold text-sky-700">⚙️ Settings</h1>
+    <span></span>
+  </header>
+
+  <!-- Storage backend status -->
+  <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+    <h2 class="font-semibold mb-2">Storage backend</h2>
+    <p class="text-sm">
+      ตอนนี้: <span class="font-semibold capitalize" x-text="currentBackend"></span>
+      <span x-show="currentBackend === 'github'" class="text-emerald-600">✓ cloud-synced</span>
+      <span x-show="currentBackend === 'local'" class="text-slate-500">(local only, ไม่ sync ข้าม device)</span>
+    </p>
+  </div>
+
+  <!-- GitHub setup -->
+  <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4 space-y-3">
+    <h2 class="font-semibold">GitHub cloud sync</h2>
+    <p class="text-xs text-slate-500 leading-relaxed">
+      เก็บข้อมูลคนไข้ใน <strong>private GitHub repo</strong> ของคุณ
+      → คอม+มือถือเห็นข้อมูลเดียวกัน + audit trail (git history) + backup อัตโนมัติ
+    </p>
+
+    <details class="text-xs text-slate-600">
+      <summary class="cursor-pointer font-semibold text-sky-700">📖 ขั้นตอนการ setup (5 นาที)</summary>
+      <ol class="list-decimal list-inside mt-2 space-y-1 pl-2">
+        <li>ไป <a href="https://github.com/new" target="_blank" class="text-sky-600 underline">github.com/new</a> สร้าง repo ชื่อ <code class="bg-slate-100 px-1">pt-data</code></li>
+        <li>เลือก <strong>Private</strong> · ไม่ต้อง init README → Create</li>
+        <li>ไป <a href="https://github.com/settings/tokens?type=beta" target="_blank" class="text-sky-600 underline">settings/tokens (fine-grained)</a> → Generate new token</li>
+        <li>Repository access: <strong>Only select repositories</strong> → เลือก <code>pt-data</code></li>
+        <li>Permissions → Repository → <strong>Contents: Read and write</strong></li>
+        <li>Copy PAT (ขึ้นต้น <code>github_pat_...</code>) แล้วใส่ในช่องด้านล่าง</li>
+      </ol>
+    </details>
+
+    <label class="block">
+      <span class="text-xs text-slate-500">GitHub username</span>
+      <input type="text" x-model="github.owner" class="input" placeholder="fiewfaw" />
+    </label>
+    <label class="block">
+      <span class="text-xs text-slate-500">Repo name</span>
+      <input type="text" x-model="github.repo" class="input" placeholder="pt-data" />
+    </label>
+    <label class="block">
+      <span class="text-xs text-slate-500">Branch</span>
+      <input type="text" x-model="github.branch" class="input" placeholder="main" />
+    </label>
+    <label class="block">
+      <span class="text-xs text-slate-500">Personal Access Token (PAT)</span>
+      <input type="password" x-model="github.pat" class="input" placeholder="github_pat_..." />
+      <span class="text-xs text-slate-400">เก็บใน localStorage device นี้เท่านั้น ไม่ส่งให้ผู้อื่น</span>
+    </label>
+
+    <div class="flex gap-2 pt-2">
+      <button @click="testConnection()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg">
+        🔍 ทดสอบ
+      </button>
+      <button @click="save()" class="flex-1 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg">
+        💾 บันทึก
+      </button>
+    </div>
+
+    <div x-show="testResult" :class="testOk ? 'text-emerald-600' : 'text-red-600'" class="text-sm mt-2" x-text="testResult"></div>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="bg-white rounded-xl border border-red-200 p-4 mb-4 space-y-2">
+    <h2 class="font-semibold text-red-600">⚠️ Danger zone</h2>
+    <button @click="clearLocal()" class="text-sm text-red-600 hover:underline">ล้าง local cache (ไม่กระทบ GitHub)</button>
+    <p class="text-xs text-slate-500">ใช้กรณีต้องการ force re-sync จาก GitHub</p>
+  </div>
+
+</div>
+
+<script>
+function settings() {
+  return {
+    currentBackend: 'local',
+    github: { owner: '', repo: 'pt-data', branch: 'main', pat: '' },
+    testResult: '',
+    testOk: false,
+
+    init() {
+      const s = window.Storage.Settings.get();
+      if (s.github) Object.assign(this.github, s.github);
+      this.currentBackend = window.Storage.get().name;
+    },
+
+    async testConnection() {
+      this.testResult = 'ทดสอบ...';
+      this.testOk = false;
+      try {
+        const res = await fetch(`https://api.github.com/repos/${this.github.owner}/${this.github.repo}`, {
+          headers: { Authorization: `token ${this.github.pat}`, Accept: 'application/vnd.github+json' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.testOk = true;
+          this.testResult = `✓ เชื่อมต่อ ${data.full_name} (${data.private ? 'private' : 'PUBLIC ⚠️'})`;
+        } else {
+          this.testResult = `✗ ${res.status}: ${await res.text()}`;
+        }
+      } catch (e) {
+        this.testResult = `✗ ${e.message}`;
+      }
+    },
+
+    save() {
+      window.Storage.Settings.update({ github: { ...this.github } });
+      this.currentBackend = window.Storage.get().name;
+      alert('บันทึกแล้ว reload page');
+      location.reload();
+    },
+
+    clearLocal() {
+      if (!confirm('ล้าง local cache ทั้งหมด? (data ใน GitHub ไม่กระทบ)')) return;
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('pt:'));
+      // Keep settings
+      keys.filter(k => k !== 'pt:settings').forEach(k => localStorage.removeItem(k));
+      alert(`ลบ ${keys.length} keys แล้ว`);
+      location.reload();
+    },
+  };
+}
+</script>
+
+</body>
+</html>
