@@ -91,9 +91,16 @@
           <input type="text" x-model="newPatient.lastInitial" class="input" placeholder="ข" /></label>
       </div>
 
-      <div class="grid grid-cols-3 gap-3">
-        <label><span class="text-xs text-slate-500">อายุ</span>
-          <input type="number" x-model="newPatient.age" class="input" placeholder="65" /></label>
+      <div class="grid grid-cols-[1fr_auto] gap-3 items-end">
+        <label class="block">
+          <span class="text-xs text-slate-500">
+            วันเกิด
+            <span x-show="newPatient.dob" class="text-sky-600 font-semibold">· <span x-text="ageFromDob(newPatient.dob)"></span> ปี</span>
+          </span>
+          <input type="date" x-model="newPatient.dob" class="input" />
+        </label>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
         <label><span class="text-xs text-slate-500">เพศ</span>
           <select x-model="newPatient.sex" class="input">
             <option value="">-</option><option>ชาย</option><option>หญิง</option>
@@ -153,10 +160,21 @@
 <script>
 function patientList() {
   const blankPatient = () => ({
-    hn: '', firstName: '', lastInitial: '', age: '', sex: '',
+    hn: '', firstName: '', lastInitial: '', dob: '', sex: '',
     dominantSide: '', dx: '', affectedSide: '', onsetDate: '',
     template: 'stroke',
   });
+
+  const ageFromDob = (dob) => {
+    if (!dob) return '';
+    const birth = new Date(dob);
+    if (isNaN(birth)) return '';
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
 
   return {
     patients: [],
@@ -166,6 +184,7 @@ function patientList() {
     Templates: window.Templates,
     newPatient: blankPatient(),
     blankPatient,
+    ageFromDob,
 
     async init() {
       const storage = window.Storage.get();

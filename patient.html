@@ -31,7 +31,8 @@
         <h1 class="text-xl font-bold" x-text="patient ? `${patient.firstName} ${patient.lastInitial}.` : ''"></h1>
         <p class="text-sm text-slate-500">
           HN <span x-text="patient?.hn"></span> ·
-          <span x-text="patient?.age"></span> y/o <span x-text="patient?.sex"></span> ·
+          <span x-text="ageFromDob(patient?.dob) || patient?.age || '?'"></span> y/o
+          <span x-text="patient?.sex"></span> ·
           dom <span x-text="patient?.dominantSide || '-'"></span>
         </p>
       </div>
@@ -99,9 +100,14 @@
         <label><span class="text-xs text-slate-500">อักษรย่อนามสกุล</span>
           <input type="text" x-model="patient.lastInitial" class="input" /></label>
       </div>
-      <div class="grid grid-cols-3 gap-3">
-        <label><span class="text-xs text-slate-500">อายุ</span>
-          <input type="number" x-model="patient.age" class="input" /></label>
+      <label class="block">
+        <span class="text-xs text-slate-500">
+          วันเกิด
+          <span x-show="patient?.dob" class="text-sky-600 font-semibold">· <span x-text="ageFromDob(patient?.dob)"></span> ปี</span>
+        </span>
+        <input type="date" x-model="patient.dob" class="input" />
+      </label>
+      <div class="grid grid-cols-2 gap-3">
         <label><span class="text-xs text-slate-500">เพศ</span>
           <select x-model="patient.sex" class="input">
             <option value="">-</option><option>ชาย</option><option>หญิง</option>
@@ -133,12 +139,24 @@
 
 <script>
 function patientDetail() {
+  const ageFromDob = (dob) => {
+    if (!dob) return '';
+    const birth = new Date(dob);
+    if (isNaN(birth)) return '';
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
   return {
     hn: '',
     patient: null,
     visits: [],
     editOpen: false,
     Templates: window.Templates,
+    ageFromDob,
 
     async init() {
       const params = new URLSearchParams(location.search);
