@@ -12,6 +12,23 @@
  */
 
 function visitForm() {
+  const blankData = () => ({
+    date: new Date().toISOString().slice(0, 10),
+    cc: '',
+    bp: '', hr: '', rr: '', spo2: '',
+    consciousness: '', cognitionNote: '',
+    brunnstrom: { UE: null, Hand: null, LE: null },
+    mas: {},
+    mmt: {},
+    sensation: {},
+    balance: {}, bbs: '',
+    mobility: {}, gait: '',
+    bi: {},
+    special: {},
+    otherFindings: '',
+    intervention: '', plan: '', notes: '',
+  });
+
   return {
     hn: '',
     patient: null,
@@ -19,14 +36,15 @@ function visitForm() {
     visitNumber: '?',
     prevVisit: null,
     prevData: {},
-    mode: 'new', // 'new' | 'edit'
+    mode: 'new',
     saved: true,
     template: 'stroke',
     open: { info: true, vs: false, cog: false, brun: true, mas: true,
             mmt: true, sens: false, bal: true, mob: true, bi: false,
             special: false, plan: true },
 
-    data: this.blankData(),
+    data: blankData(),
+    blankData,
 
     // BI definition (same as before)
     bi_items: [
@@ -51,25 +69,6 @@ function visitForm() {
       { key: 'bladder',  label: 'Bladder',
         opts: [{v:0,label:'incont'},{v:5,label:'occ acc'},{v:10,label:'cont'}] },
     ],
-
-    blankData() {
-      return {
-        date: new Date().toISOString().slice(0, 10),
-        cc: '',
-        bp: '', hr: '', rr: '', spo2: '',
-        consciousness: '', cognitionNote: '',
-        brunnstrom: { UE: null, Hand: null, LE: null },
-        mas: {},
-        mmt: {},
-        sensation: {},
-        balance: {}, bbs: '',
-        mobility: {}, gait: '',
-        bi: {},
-        special: {},
-        otherFindings: '',
-        intervention: '', plan: '', notes: '',
-      };
-    },
 
     async init() {
       const params = new URLSearchParams(location.search);

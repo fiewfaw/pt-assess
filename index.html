@@ -152,21 +152,20 @@
 
 <script>
 function patientList() {
+  const blankPatient = () => ({
+    hn: '', firstName: '', lastInitial: '', age: '', sex: '',
+    dominantSide: '', dx: '', affectedSide: '', onsetDate: '',
+    template: 'stroke',
+  });
+
   return {
     patients: [],
     search: '',
     newOpen: false,
     storageMode: 'local',
     Templates: window.Templates,
-    newPatient: this.blankPatient(),
-
-    blankPatient() {
-      return {
-        hn: '', firstName: '', lastInitial: '', age: '', sex: '',
-        dominantSide: '', dx: '', affectedSide: '', onsetDate: '',
-        template: 'stroke',
-      };
-    },
+    newPatient: blankPatient(),
+    blankPatient,
 
     async init() {
       const storage = window.Storage.get();
