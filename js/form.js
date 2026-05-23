@@ -44,15 +44,18 @@ function visitForm() {
     lastSavedAt: null,
     _initialized: false,
     template: 'stroke',
-    activeTab: 'info',
+    activeTab: 'note',
     tabs: [
-      { id: 'info',  icon: '📋', label: 'ข้อมูล' },
-      { id: 'motor', icon: '💪', label: 'Motor' },
-      { id: 'chart', icon: '🗺️', label: 'Body Chart' },
-      { id: 'func',  icon: '🚶', label: 'Function' },
-      { id: 'plan',  icon: '🎯', label: 'Plan' },
-      { id: 'ref',   icon: '📖', label: 'โพย' },
+      { id: 'note',   icon: '📝', label: 'จดโน๊ต' },
+      { id: 'assess', icon: '📋', label: 'แบบประเมิน' },
+      { id: 'plan',   icon: '🎯', label: 'Plan' },
     ],
+    sectionTab: {
+      info: 'note', bodychart: 'note',
+      vs: 'assess', cog: 'assess', brun: 'assess', mas: 'assess', mmt: 'assess',
+      sens: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
+      plan: 'plan',
+    },
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
             mmt: true, sens: true, bodychart: true, bal: true, mob: true, bi: true,
             special: true, plan: true },
@@ -172,7 +175,7 @@ function visitForm() {
 
       // Re-measure body chart canvas when its tab becomes active
       this.$watch('activeTab', (val) => {
-        if (val === 'chart') this.chartSetupCanvas();
+        if (val === 'note') this.chartSetupCanvas();
       });
 
       // Flush on tab close / navigate
@@ -285,9 +288,11 @@ function visitForm() {
 
     switchTab(id) {
       this.activeTab = id;
-      if (id === 'chart') this.chartSetupCanvas();
+      if (id === 'note') this.chartSetupCanvas();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
+
+    inTab(sec) { return this.sectionTab[sec] === this.activeTab; },
 
     async _autoSave() {
       // Skip if new visit with no changes — don't pollute records

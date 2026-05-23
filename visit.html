@@ -67,10 +67,10 @@
 
   <!-- Tab content -->
   <div>
-    <!-- TAB: ข้อมูล -->
-    <div x-show="activeTab === 'info'">
+    <!-- sections gated per-section via inTab() -->
+    <div>
       <!-- Section: Patient Info -->
-      <section x-show="sections.includes('info')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('info') && inTab('info')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('info')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">👤 ข้อมูล Visit</span>
           <span x-text="open.info ? '▾' : '▸'" class="text-slate-400"></span>
@@ -92,7 +92,7 @@
       </section>
 
       <!-- Section: Vital Signs -->
-      <section x-show="sections.includes('vs')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('vs') && inTab('vs')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('vs')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🩺 Vital signs</span>
           <span x-text="open.vs ? '▾' : '▸'" class="text-slate-400"></span>
@@ -112,7 +112,7 @@
       </section>
 
       <!-- Section: Consciousness / Cognition -->
-      <section x-show="sections.includes('cog')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('cog') && inTab('cog')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('cog')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🧠 Consciousness</span>
           <span x-text="open.cog ? '▾' : '▸'" class="text-slate-400"></span>
@@ -134,12 +134,11 @@
         </div>
       </section>
 
-    </div><!-- /TAB info -->
+    </div>
 
-    <!-- TAB: Motor -->
-    <div x-show="activeTab === 'motor'">
+    <div>
       <!-- Section: Brunnstrom -->
-      <section x-show="sections.includes('brun')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('brun') && inTab('brun')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('brun')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">💪 Brunnstrom Stage</span>
           <span x-text="open.brun ? '▾' : '▸'" class="text-slate-400"></span>
@@ -160,7 +159,7 @@
       </section>
 
       <!-- Section: MAS -->
-      <section x-show="sections.includes('mas')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('mas') && inTab('mas')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('mas')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">⚡ MAS</span>
           <span x-text="open.mas ? '▾' : '▸'" class="text-slate-400"></span>
@@ -185,7 +184,7 @@
       </section>
 
       <!-- Section: MMT -->
-      <section x-show="sections.includes('mmt')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('mmt') && inTab('mmt')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('mmt')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🏋️ MMT (R/L)</span>
           <span x-text="open.mmt ? '▾' : '▸'" class="text-slate-400"></span>
@@ -220,7 +219,7 @@
       </section>
 
       <!-- Section: Sensation -->
-      <section x-show="sections.includes('sens')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('sens') && inTab('sens')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('sens')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">✋ Sensation</span>
           <span x-text="open.sens ? '▾' : '▸'" class="text-slate-400"></span>
@@ -244,12 +243,11 @@
         </div>
       </section>
 
-    </div><!-- /TAB motor -->
+    </div>
 
-    <!-- TAB: Body Chart -->
-    <div x-show="activeTab === 'chart'">
+    <div>
       <!-- Section: Body Chart Canvas -->
-      <section x-show="sections.includes('bodychart')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('bodychart') && inTab('bodychart')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('bodychart')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">
             🗺️ Body Chart
@@ -299,12 +297,11 @@
         </div>
       </section>
 
-    </div><!-- /TAB chart -->
+    </div>
 
-    <!-- TAB: Function -->
-    <div x-show="activeTab === 'func'">
+    <div>
       <!-- Section: Balance -->
-      <section x-show="sections.includes('bal')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('bal') && inTab('bal')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('bal')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">⚖️ Balance</span>
           <span x-text="open.bal ? '▾' : '▸'" class="text-slate-400"></span>
@@ -332,7 +329,7 @@
       </section>
 
       <!-- Section: Mobility -->
-      <section x-show="sections.includes('mob')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('mob') && inTab('mob')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('mob')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🚶 Mobility</span>
           <span x-text="open.mob ? '▾' : '▸'" class="text-slate-400"></span>
@@ -361,7 +358,7 @@
       </section>
 
       <!-- Section: Barthel -->
-      <section x-show="sections.includes('bi')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('bi') && inTab('bi')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('bi')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🏠 Barthel Index <span class="text-xs text-sky-600 font-normal" x-text="`(${bi_total}/100${prevBI !== null ? ' · prev ' + prevBI : ''})`"></span></span>
           <span x-text="open.bi ? '▾' : '▸'" class="text-slate-400"></span>
@@ -385,12 +382,11 @@
         </div>
       </section>
 
-    </div><!-- /TAB func -->
+    </div>
 
-    <!-- TAB: Plan -->
-    <div x-show="activeTab === 'plan'">
+    <div>
       <!-- Section: Special -->
-      <section x-show="sections.includes('special')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('special') && inTab('special')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('special')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🔍 Special findings</span>
           <span x-text="open.special ? '▾' : '▸'" class="text-slate-400"></span>
@@ -411,7 +407,7 @@
       </section>
 
       <!-- Section: Plan / Goals -->
-      <section x-show="sections.includes('plan')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+      <section x-show="sections.includes('plan') && inTab('plan')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('plan')" class="w-full px-4 py-3 flex justify-between items-center text-left">
           <span class="font-semibold">🎯 Plan & Notes</span>
           <span x-text="open.plan ? '▾' : '▸'" class="text-slate-400"></span>
@@ -437,10 +433,10 @@
           </label>
         </div>
       </section>
-    </div><!-- /TAB plan -->
+    </div>
 
-    <!-- TAB: โพย (reference cheatsheet ของนักกายภาพ) -->
-    <div x-show="activeTab === 'ref'" class="space-y-3">
+    <!-- reference โพย — folded into แบบประเมิน tab -->
+    <div x-show="activeTab === 'assess'" class="space-y-3">
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
         📖 แผ่นโพยอ้างอิงส่วนตัว — สรุปความหมายของคะแนนสเกล + ช่องจดโปรโตคอลของคุณเอง (กันลืมตอนตรวจภาคสนาม)
       </div>
