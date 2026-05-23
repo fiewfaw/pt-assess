@@ -81,6 +81,24 @@
     <div x-show="testResult" :class="testOk ? 'text-emerald-600' : 'text-red-600'" class="text-sm mt-2" x-text="testResult"></div>
   </div>
 
+  <!-- Export / Backup -->
+  <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4 space-y-2">
+    <h2 class="font-semibold">📤 Export ข้อมูล (สำรอง / ส่งให้ Claude)</h2>
+    <p class="text-xs text-slate-500">ดึงคนไข้+visit ทั้งหมดในเครื่องนี้ออกมาเป็น JSON (ไม่รวม PAT) — ใช้ตอน sync ไม่ได้</p>
+    <button @click="exportData()" class="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg">📤 ดึงข้อมูลออกมา</button>
+    <template x-if="exportText">
+      <div class="space-y-2">
+        <p class="text-xs text-emerald-600 font-semibold" x-text="exportInfo"></p>
+        <div class="flex gap-2">
+          <button @click="copyExport()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">📋 คัดลอก</button>
+          <button @click="shareExport()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🔗 แชร์/อีเมล</button>
+        </div>
+        <textarea readonly x-model="exportText" @click="$event.target.select()" class="input text-xs" style="min-height:120px;font-family:monospace"></textarea>
+        <p class="text-xs text-slate-400">แตะกล่อง = เลือกทั้งหมด → ก๊อปเอง (เผื่อปุ่มคัดลอกไม่ทำงาน)</p>
+      </div>
+    </template>
+  </div>
+
   <!-- Danger zone -->
   <div class="bg-white rounded-xl border border-red-200 p-4 mb-4 space-y-2">
     <h2 class="font-semibold text-red-600">⚠️ Danger zone</h2>
@@ -97,6 +115,8 @@ function settings() {
     github: { owner: '', repo: 'pt-data', branch: 'main', pat: '' },
     testResult: '',
     testOk: false,
+    exportText: '',
+    exportInfo: '',
 
     init() {
       const s = window.Storage.Settings.get();
@@ -136,6 +156,34 @@ function settings() {
       this.currentBackend = window.Storage.get().name;
       alert('บันทึกแล้ว reload page');
       location.reload();
+    },
+
+    exportData() {
+      const dump = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('pt:') && k !== 'pt:settings') {
+          try { dump[k] = JSON.parse(localStorage.getItem(k)); }
+          catch { dump[k] = localStorage.getItem(k); }
+        }
+      }
+      this.exportText = JSON.stringify(dump, null, 2);
+      const patients = (dump['pt:patients'] || []).length;
+      const visits = Object.keys(dump).filter(k => /^pt:visit:/.test(k)).length;
+      this.exportInfo = `พบ: คนไข้ ${patients} คน · visit ${visits} รายการ`;
+    },
+
+    async copyExport() {
+      try { await navigator.clipboard.writeText(this.exportText); alert('คัดลอกแล้ว ✓ — เอาไปวางในอีเมลส่งหาตัวเองได้เลย'); }
+      catch { alert('คัดลอกอัตโนมัติไม่ได้ — แตะกล่องข้อความเพื่อเลือกทั้งหมดแล้วก๊อปเอง'); }
+    },
+
+    async shareExport() {
+      if (navigator.share) {
+        try { await navigator.share({ title: 'PT Assess export', text: this.exportText }); } catch {}
+      } else {
+        alert('อุปกรณ์ไม่รองรับแชร์ — ใช้ปุ่ม คัดลอก แทน');
+      }
     },
 
     clearLocal() {
