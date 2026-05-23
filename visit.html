@@ -80,14 +80,6 @@
             <span class="text-xs text-slate-500">วันที่ตรวจ</span>
             <input type="date" x-model="data.date" class="input" />
           </label>
-          <label class="block">
-            <span class="text-xs text-slate-500">Subjective / Chief complaint วันนี้</span>
-            <div class="relative">
-              <textarea x-model="data.cc" class="input min-h-[60px]" placeholder="คนไข้บ่นวันนี้..."></textarea>
-              <button @click="voice('cc')" class="absolute right-2 top-2 btn-mic">🎤</button>
-            </div>
-            <span x-show="prevValue('cc')" class="text-xs text-slate-400 mt-1 block" x-text="`prev: ${prevValue('cc')}`"></span>
-          </label>
         </div>
       </section>
 
@@ -144,6 +136,17 @@
           <span x-text="open.brun ? '▾' : '▸'" class="text-slate-400"></span>
         </button>
         <div x-show="open.brun" x-collapse class="px-4 pb-4 space-y-3">
+          <button type="button" @click="infoOpen.brun = !infoOpen.brun" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.brun ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์การให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.brun" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p><b>1</b> Flaccid · ไม่มี movement</p>
+            <p><b>2</b> เริ่มมี synergy · spasticity เริ่มขึ้น</p>
+            <p><b>3</b> Synergy ชัด · spasticity สูงสุด</p>
+            <p><b>4</b> เริ่มมี movement นอก synergy · spasticity ลด</p>
+            <p><b>5</b> Movement นอก synergy ได้มากขึ้น</p>
+            <p><b>6</b> Movement เกือบปกติ · coordination ดี</p>
+          </div>
           <template x-for="part in ['UE','Hand','LE']">
             <div>
               <span class="text-xs text-slate-500" x-text="`${part} (affected) ${prevValue(['brunnstrom', part]) ? '· prev ' + prevValue(['brunnstrom', part]) : ''}`"></span>
@@ -166,6 +169,17 @@
         </button>
         <div x-show="open.mas" x-collapse class="px-4 pb-4 space-y-2">
           <p class="text-xs text-slate-400">0 · 1 · 1+ · 2 · 3 · 4</p>
+          <button type="button" @click="infoOpen.mas = !infoOpen.mas" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.mas ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์การให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.mas" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p><b>0</b> ไม่มี tone เพิ่ม</p>
+            <p><b>1</b> เพิ่มเล็กน้อย · catch แล้วปล่อย ปลายช่วง</p>
+            <p><b>1+</b> เพิ่มเล็กน้อย · catch + ต้านน้อย &lt;½ ROM</p>
+            <p><b>2</b> เพิ่มชัดเกือบทั้ง ROM · ขยับ passive ได้</p>
+            <p><b>3</b> เพิ่มมาก · passive ยาก</p>
+            <p><b>4</b> Rigid · งอ/เหยียดไม่ได้</p>
+          </div>
           <template x-for="joint in ['Shoulder flex','Elbow flex','Wrist flex','Hip flex','Knee ext','Ankle PF']">
             <div class="flex items-center gap-2">
               <span class="text-sm w-28 shrink-0 flex flex-col">
@@ -191,6 +205,13 @@
         </button>
         <div x-show="open.mmt" x-collapse class="px-4 pb-4 space-y-2">
           <p class="text-xs text-slate-400">0 · 1 · 2 · 3 · 3+ · 4 · 5</p>
+          <button type="button" @click="infoOpen.mmt = !infoOpen.mmt" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.mmt ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์การให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.mmt" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p><b>0</b> ไม่มีการหดตัว · <b>1</b> คลำได้แต่ไม่ขยับ · <b>2</b> ขยับได้เมื่อตัดแรงโน้มถ่วง</p>
+            <p><b>3</b> ต้านแรงโน้มถ่วงได้ · <b>3+</b> + แรงต้านเล็กน้อย · <b>4</b> ต้านปานกลาง · <b>5</b> ปกติ</p>
+          </div>
           <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center text-xs font-semibold text-slate-500">
             <span>Muscle</span><span class="w-16 text-center">R</span><span class="w-16 text-center">L</span>
           </div>
@@ -296,7 +317,52 @@
           </div>
         </div>
       </section>
+    </div>
 
+    <!-- Section: Notepad (handwriting) — note tab only -->
+    <div x-show="activeTab === 'note'">
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <div class="px-4 py-3 flex justify-between items-center">
+          <span class="font-semibold">✍️ กระดาษจดโน๊ต
+            <span x-show="notepadStrokes.length > 0" class="text-xs text-emerald-600 font-normal" x-text="`· ${notepadStrokes.length} เส้น`"></span>
+          </span>
+        </div>
+        <div class="px-4 pb-4 space-y-2">
+          <div class="flex flex-wrap gap-1 items-center">
+            <template x-for="c in notepadColors" :key="c.id">
+              <button @click="notepadTool='pen'; notepadColor=c.color"
+                :class="(notepadTool==='pen' && notepadColor===c.color) ? 'pill-on' : 'pill'"
+                class="text-xs flex-none">
+                <span class="inline-block w-4 h-4 rounded-full align-middle" :style="`background:${c.color}`"></span>
+              </button>
+            </template>
+            <button @click="notepadTool='eraser'"
+              :class="notepadTool==='eraser' ? 'pill-on' : 'pill'" class="text-xs">🧽 ยางลบ</button>
+            <span class="mx-1 text-slate-300">|</span>
+            <template x-for="sz in [2,3,5]" :key="sz">
+              <button @click="notepadSize=sz"
+                :class="notepadSize===sz ? 'pill-on' : 'pill'" class="text-xs flex-none">
+                <span class="inline-block rounded-full bg-current"
+                  :style="`width:${sz*2}px;height:${sz*2}px;vertical-align:middle`"></span>
+              </button>
+            </template>
+            <button @click="notepadUndo()" class="pill text-xs ml-1">↶ Undo</button>
+            <button @click="notepadClear()" class="pill text-xs text-red-600">🗑 Clear</button>
+          </div>
+          <p class="text-xs text-slate-400">เขียนด้วย S Pen หรือนิ้ว · กดปุ่มข้าง S Pen = ยางลบ · auto-save</p>
+          <div class="border border-slate-200 rounded-lg overflow-hidden"
+               style="background-image: repeating-linear-gradient(#fff, #fff 31px, #e2e8f0 32px); background-size: 100% 32px;">
+            <canvas x-ref="notepadCanvas"
+                    class="block w-full"
+                    style="touch-action: none; aspect-ratio: 1000 / 1400;"
+                    @pointerdown.prevent="notepadStart($event)"
+                    @pointermove.prevent="notepadMove($event)"
+                    @pointerup="notepadEnd()"
+                    @pointercancel="notepadEnd()"
+                    @pointerleave="notepadEnd()"></canvas>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div>
@@ -336,6 +402,13 @@
         </button>
         <div x-show="open.mob" x-collapse class="px-4 pb-4 space-y-2">
           <p class="text-xs text-slate-400">I · S · MinA · ModA · MaxA · D</p>
+          <button type="button" @click="infoOpen.mob = !infoOpen.mob" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.mob ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ระดับการช่วยเหลือ'"></span>
+          </button>
+          <div x-show="infoOpen.mob" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p><b>I</b> Independent ทำเองได้ · <b>S</b> Supervision/standby ดูแลห่าง ๆ</p>
+            <p><b>MinA</b> ช่วย ~25% · <b>ModA</b> ~50% · <b>MaxA</b> ~75% · <b>D</b> Dependent ทำให้ทั้งหมด</p>
+          </div>
           <template x-for="task in ['Rolling','Supine→Sit','Sit→Stand','Transfer','Standing','Ambulation','Stairs']">
             <div class="flex items-center gap-2">
               <span class="text-sm w-24 shrink-0 flex flex-col">
@@ -364,6 +437,13 @@
           <span x-text="open.bi ? '▾' : '▸'" class="text-slate-400"></span>
         </button>
         <div x-show="open.bi" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.bi = !infoOpen.bi" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.bi ? '▾ ซ่อนเกณฑ์' : 'ⓘ การแปลผลคะแนนรวม'"></span>
+          </button>
+          <div x-show="infoOpen.bi" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>0–20 dependent · 21–60 severe · 61–90 moderate · 91–99 slight · 100 independent</p>
+            <p class="text-slate-400">แต่ละข้อมีคำอธิบายกำกับปุ่มอยู่แล้ว</p>
+          </div>
           <template x-for="item in bi_items" :key="item.key">
             <div>
               <span class="text-sm flex justify-between">
@@ -438,47 +518,8 @@
     <!-- reference โพย — folded into แบบประเมิน tab -->
     <div x-show="activeTab === 'assess'" class="space-y-3">
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-        📖 แผ่นโพยอ้างอิงส่วนตัว — สรุปความหมายของคะแนนสเกล + ช่องจดโปรโตคอลของคุณเอง (กันลืมตอนตรวจภาคสนาม)
+        📖 เกณฑ์คะแนนแต่ละสเกลกดดูได้ที่ปุ่ม "ⓘ เกณฑ์" ในแต่ละแบบประเมินด้านบน · ด้านล่างคือช่องจดโพยส่วนตัว
       </div>
-
-      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-4 py-3 font-semibold border-b border-slate-100">💪 Brunnstrom Stage</div>
-        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
-          <p><b>1</b> Flaccid · ไม่มี movement</p>
-          <p><b>2</b> เริ่มมี synergy · spasticity เริ่มขึ้น</p>
-          <p><b>3</b> Synergy ชัด · spasticity สูงสุด</p>
-          <p><b>4</b> เริ่มมี movement นอก synergy · spasticity ลด</p>
-          <p><b>5</b> Movement นอก synergy ได้มากขึ้น</p>
-          <p><b>6</b> Movement เกือบปกติ · coordination ดี</p>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-4 py-3 font-semibold border-b border-slate-100">⚡ Modified Ashworth (MAS)</div>
-        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
-          <p><b>0</b> ไม่มี tone เพิ่ม</p>
-          <p><b>1</b> เพิ่มเล็กน้อย · catch แล้วปล่อย ปลายช่วง</p>
-          <p><b>1+</b> เพิ่มเล็กน้อย · catch + ต้านน้อย &lt;½ ROM</p>
-          <p><b>2</b> เพิ่มชัดเกือบทั้ง ROM · ขยับ passive ได้</p>
-          <p><b>3</b> เพิ่มมาก · passive ยาก</p>
-          <p><b>4</b> Rigid · งอ/เหยียดไม่ได้</p>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-4 py-3 font-semibold border-b border-slate-100">🏋️ MMT</div>
-        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
-          <p><b>0</b> ไม่มีการหดตัว · <b>1</b> คลำได้แต่ไม่ขยับ · <b>2</b> ขยับได้ถ้าตัดแรงโน้มถ่วง</p>
-          <p><b>3</b> ต้านแรงโน้มถ่วงได้ · <b>4</b> ต้านแรงต้านปานกลาง · <b>5</b> ปกติ</p>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-4 py-3 font-semibold border-b border-slate-100">🏠 Barthel Index (การแปลผล)</div>
-        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
-          <p>0–20 dependent · 21–60 severe · 61–90 moderate · 91–99 slight · 100 independent</p>
-        </div>
-      </section>
 
       <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-4 py-3 font-semibold border-b border-slate-100">📝 โพยของฉัน (จดเอง)</div>

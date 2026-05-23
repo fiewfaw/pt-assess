@@ -22,6 +22,7 @@ function visitForm() {
     mmt: {},
     sensation: {},
     bodyChart: [],   // array of strokes [{tool, color, size, points: [[x,y],...]}]
+    noteCanvas: [],  // handwriting notepad strokes (tab 1)
     balance: {}, bbs: '',
     mobility: {}, gait: '',
     bi: {},
@@ -59,6 +60,7 @@ function visitForm() {
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
             mmt: true, sens: true, bodychart: true, bal: true, mob: true, bi: true,
             special: true, plan: true },
+    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false },
 
     // Body chart canvas state
     chartTool: 'pain',
@@ -73,6 +75,19 @@ function visitForm() {
       { id: 'sensation', color: '#16a34a', label: 'Sens loss', icon: '🟢' },
       { id: 'note',      color: '#0f172a', label: 'Note',      icon: '⚫' },
       { id: 'eraser',    color: null,      label: 'Eraser',    icon: '🧽' },
+    ],
+
+    // Notepad (handwriting) canvas state — tab 1
+    notepadTool: 'pen',
+    notepadColor: '#0f172a',
+    notepadSize: 3,
+    notepadStrokes: [],
+    _notepadDrawing: false,
+    _notepadCurrent: null,
+    notepadColors: [
+      { id: 'black', color: '#0f172a' },
+      { id: 'blue',  color: '#2563eb' },
+      { id: 'red',   color: '#dc2626' },
     ],
 
     data: blankData(),
@@ -128,8 +143,9 @@ function visitForm() {
           this.data.date = new Date().toISOString().slice(0, 10);
           this.prevData = JSON.parse(JSON.stringify(this.prevVisit.data));
         }
-        // Body chart is per-visit (don't carry strokes forward)
+        // Body chart + notepad are per-visit (don't carry strokes forward)
         this.data.bodyChart = [];
+        this.data.noteCanvas = [];
         // Determine next visit number
         const visits = await storage.listVisits(this.hn);
         const nums = visits.map(v => parseInt(v.visitId, 10)).filter(n => !isNaN(n));
@@ -155,10 +171,16 @@ function visitForm() {
       if (Array.isArray(this.data.bodyChart)) {
         this.chartStrokes = [...this.data.bodyChart];
       }
+      if (Array.isArray(this.data.noteCanvas)) {
+        this.notepadStrokes = [...this.data.noteCanvas];
+      }
 
       // Mark initialized AFTER initial data load so the watch doesn't auto-save the preload
       await this.$nextTick();
       this._initialized = true;
+
+      // Initial canvas render for the default (note) tab
+      this.notepadSetupCanvas();
 
       // Auto-save: 3s after last change (debounced)
       this.$watch('data', () => {
@@ -173,9 +195,9 @@ function visitForm() {
         if (val) this.chartSetupCanvas();
       });
 
-      // Re-measure body chart canvas when its tab becomes active
+      // Re-measure canvases when the note tab becomes active
       this.$watch('activeTab', (val) => {
-        if (val === 'note') this.chartSetupCanvas();
+        if (val === 'note') { this.chartSetupCanvas(); this.notepadSetupCanvas(); }
       });
 
       // Flush on tab close / navigate
@@ -288,7 +310,7 @@ function visitForm() {
 
     switchTab(id) {
       this.activeTab = id;
-      if (id === 'note') this.chartSetupCanvas();
+      if (id === 'note') { this.chartSetupCanvas(); this.notepadSetupCanvas(); }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
@@ -368,10 +390,11 @@ function visitForm() {
       this.chartSetupCanvas();
       this._chartDrawing = true;
       try { e.target.setPointerCapture?.(e.pointerId); } catch {}
-      const tool = this.chartTools.find(t => t.id === this.chartTool);
+      const toolId = this._isEraserEvent(e) ? 'eraser' : this.chartTool;
+      const tool = this.chartTools.find(t => t.id === toolId);
       const pt = this._chartPoint(e);
       this._chartCurrent = {
-        tool: this.chartTool,
+        tool: toolId,
         color: tool?.color,
         size: this.chartSize,
         points: [pt],
@@ -451,6 +474,122 @@ function visitForm() {
       this.chartStrokes = [];
       this.data.bodyChart = [];
       this.chartRedraw();
+    },
+
+    // S Pen barrel/side button (or eraser tip) → treat as eraser
+    _isEraserEvent(e) {
+      if (e.pointerType === 'eraser') return true;
+      if (e.pointerType === 'pen') {
+        if ((e.buttons & 32) || (e.buttons & 2)) return true;  // eraser bit / barrel bit held
+        if (e.button === 5 || e.button === 2) return true;     // eraser / barrel on pointerdown
+      }
+      return false;
+    },
+
+    // ---- Notepad (handwriting) canvas methods ----
+    notepadSetupCanvas() {
+      this.$nextTick(() => {
+        const canvas = this.$refs.notepadCanvas;
+        if (!canvas) return;
+        if (canvas.width !== 1000) { canvas.width = 1000; canvas.height = 1400; }
+        this.notepadRedraw();
+      });
+    },
+
+    _notepadPoint(e) {
+      const canvas = this.$refs.notepadCanvas;
+      const rect = canvas.getBoundingClientRect();
+      return [
+        Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+        Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
+      ];
+    },
+
+    notepadStart(e) {
+      this.notepadSetupCanvas();
+      this._notepadDrawing = true;
+      try { e.target.setPointerCapture?.(e.pointerId); } catch {}
+      const erase = this._isEraserEvent(e) || this.notepadTool === 'eraser';
+      this._notepadCurrent = {
+        tool: erase ? 'eraser' : 'pen',
+        color: this.notepadColor,
+        size: this.notepadSize,
+        points: [this._notepadPoint(e)],
+      };
+      this._notepadDrawStroke(this._notepadCurrent);
+    },
+
+    notepadMove(e) {
+      if (!this._notepadDrawing || !this._notepadCurrent) return;
+      this._notepadCurrent.points.push(this._notepadPoint(e));
+      this._notepadDrawStroke(this._notepadCurrent);
+    },
+
+    notepadEnd() {
+      if (this._notepadCurrent && this._notepadCurrent.points.length > 0) {
+        this.notepadStrokes.push(this._notepadCurrent);
+        this.data.noteCanvas = [...this.notepadStrokes];
+      }
+      this._notepadDrawing = false;
+      this._notepadCurrent = null;
+    },
+
+    _notepadDrawStroke(stroke) {
+      const canvas = this.$refs.notepadCanvas;
+      if (!canvas || !canvas.width) return;
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (stroke.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = '#000';
+        ctx.fillStyle = '#000';
+        ctx.lineWidth = stroke.size * 6;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+        ctx.fillStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+      }
+      const pts = stroke.points;
+      const W = canvas.width, H = canvas.height;
+      if (pts.length === 1) {
+        const p = pts[0];
+        ctx.beginPath();
+        ctx.arc(p[0] * W, p[1] * H,
+                (stroke.tool === 'eraser' ? stroke.size * 3 : stroke.size / 2), 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] * W, pts[0][1] * H);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i][0] * W, pts[i][1] * H);
+      }
+      ctx.stroke();
+    },
+
+    notepadRedraw() {
+      const canvas = this.$refs.notepadCanvas;
+      if (!canvas || !canvas.width) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of this.notepadStrokes) this._notepadDrawStroke(s);
+    },
+
+    notepadUndo() {
+      if (this.notepadStrokes.length === 0) return;
+      this.notepadStrokes.pop();
+      this.data.noteCanvas = [...this.notepadStrokes];
+      this.notepadRedraw();
+    },
+
+    notepadClear() {
+      if (this.notepadStrokes.length === 0) return;
+      if (!confirm('ลบโน๊ตทั้งหมด?')) return;
+      this.notepadStrokes = [];
+      this.data.noteCanvas = [];
+      this.notepadRedraw();
     },
 
     voice(field) {
