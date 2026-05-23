@@ -105,7 +105,7 @@ class LocalStorageBackend {
 class GitHubBackend {
   constructor({ pat, owner, repo, branch = 'main' }) {
     this.name = 'github';
-    this.pat = (pat || '').trim();
+    this.pat = (pat || '').replace(/\s/g, '');
     this.owner = (owner || '').trim();
     this.repo = (repo || '').trim();
     this.branch = (branch || 'main').trim();

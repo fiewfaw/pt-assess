@@ -107,7 +107,7 @@ function settings() {
     async testConnection() {
       this.github.owner = (this.github.owner || '').trim();
       this.github.repo = (this.github.repo || '').trim();
-      this.github.pat = (this.github.pat || '').trim();
+      this.github.pat = (this.github.pat || '').replace(/\s/g, '');
       this.github.branch = (this.github.branch || 'main').trim();
       this.testResult = 'ทดสอบ...';
       this.testOk = false;
@@ -130,7 +130,7 @@ function settings() {
     save() {
       this.github.owner = (this.github.owner || '').trim();
       this.github.repo = (this.github.repo || '').trim();
-      this.github.pat = (this.github.pat || '').trim();
+      this.github.pat = (this.github.pat || '').replace(/\s/g, '');
       this.github.branch = (this.github.branch || 'main').trim();
       window.Storage.Settings.update({ github: { ...this.github } });
       this.currentBackend = window.Storage.get().name;
