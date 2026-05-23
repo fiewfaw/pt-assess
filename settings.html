@@ -90,10 +90,10 @@
       <div class="space-y-2">
         <p class="text-xs text-emerald-600 font-semibold" x-text="exportInfo"></p>
         <div class="flex gap-2">
-          <button @click="copyExport()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">📋 คัดลอก</button>
-          <button @click="shareExport()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🔗 แชร์/อีเมล</button>
+          <button @click="copyExport()" class="flex-1 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg text-sm">📋 คัดลอก</button>
+          <button @click="downloadExport()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">💾 ดาวน์โหลด</button>
         </div>
-        <textarea readonly x-model="exportText" @click="$event.target.select()" class="input text-xs" style="min-height:120px;font-family:monospace"></textarea>
+        <textarea readonly x-ref="exportBox" x-model="exportText" @click="$event.target.select()" class="input text-xs" style="min-height:120px;font-family:monospace"></textarea>
         <p class="text-xs text-slate-400">แตะกล่อง = เลือกทั้งหมด → ก๊อปเอง (เผื่อปุ่มคัดลอกไม่ทำงาน)</p>
       </div>
     </template>
@@ -174,16 +174,25 @@ function settings() {
     },
 
     async copyExport() {
-      try { await navigator.clipboard.writeText(this.exportText); alert('คัดลอกแล้ว ✓ — เอาไปวางในอีเมลส่งหาตัวเองได้เลย'); }
-      catch { alert('คัดลอกอัตโนมัติไม่ได้ — แตะกล่องข้อความเพื่อเลือกทั้งหมดแล้วก๊อปเอง'); }
+      try { await navigator.clipboard.writeText(this.exportText); alert('คัดลอกแล้ว ✓ — เปิด Gmail แล้ววางในเมลส่งหาตัวเอง'); return; }
+      catch {}
+      try {
+        const ta = this.$refs.exportBox;
+        ta.removeAttribute('readonly'); ta.focus(); ta.select();
+        const ok = document.execCommand('copy');
+        ta.setAttribute('readonly', '');
+        alert(ok ? 'คัดลอกแล้ว ✓ — เปิด Gmail แล้ววาง' : 'คัดลอกไม่ได้ — แตะกล่องเลือกทั้งหมดแล้วก๊อปเอง');
+      } catch { alert('คัดลอกไม่ได้ — แตะกล่องเลือกทั้งหมดแล้วก๊อปเอง'); }
     },
 
-    async shareExport() {
-      if (navigator.share) {
-        try { await navigator.share({ title: 'PT Assess export', text: this.exportText }); } catch {}
-      } else {
-        alert('อุปกรณ์ไม่รองรับแชร์ — ใช้ปุ่ม คัดลอก แทน');
-      }
+    downloadExport() {
+      const blob = new Blob([this.exportText], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pt-assess-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
 
     clearLocal() {
