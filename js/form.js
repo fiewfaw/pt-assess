@@ -28,6 +28,7 @@ function visitForm() {
     special: {},
     otherFindings: '',
     intervention: '', plan: '', notes: '',
+    refNote: '',
   });
 
   return {
@@ -43,9 +44,18 @@ function visitForm() {
     lastSavedAt: null,
     _initialized: false,
     template: 'stroke',
-    open: { info: true, vs: false, cog: false, brun: true, mas: true,
-            mmt: true, sens: false, bodychart: false, bal: true, mob: true, bi: false,
-            special: false, plan: true },
+    activeTab: 'info',
+    tabs: [
+      { id: 'info',  icon: '📋', label: 'ข้อมูล' },
+      { id: 'motor', icon: '💪', label: 'Motor' },
+      { id: 'chart', icon: '🗺️', label: 'Body Chart' },
+      { id: 'func',  icon: '🚶', label: 'Function' },
+      { id: 'plan',  icon: '🎯', label: 'Plan' },
+      { id: 'ref',   icon: '📖', label: 'โพย' },
+    ],
+    open: { info: true, vs: true, cog: true, brun: true, mas: true,
+            mmt: true, sens: true, bodychart: true, bal: true, mob: true, bi: true,
+            special: true, plan: true },
 
     // Body chart canvas state
     chartTool: 'pain',
@@ -160,6 +170,11 @@ function visitForm() {
         if (val) this.chartSetupCanvas();
       });
 
+      // Re-measure body chart canvas when its tab becomes active
+      this.$watch('activeTab', (val) => {
+        if (val === 'chart') this.chartSetupCanvas();
+      });
+
       // Flush on tab close / navigate
       window.addEventListener('beforeunload', () => {
         if (!this.saved) this._autoSave();
@@ -267,6 +282,12 @@ function visitForm() {
     },
 
     toggle(k) { this.open[k] = !this.open[k]; },
+
+    switchTab(id) {
+      this.activeTab = id;
+      if (id === 'chart') this.chartSetupCanvas();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
 
     async _autoSave() {
       // Skip if new visit with no changes — don't pollute records

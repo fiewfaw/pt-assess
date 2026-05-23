@@ -91,6 +91,13 @@
           <input type="text" x-model="newPatient.lastInitial" class="input" placeholder="ข" /></label>
       </div>
 
+      <div class="grid grid-cols-2 gap-3">
+        <label><span class="text-xs text-slate-500">ชื่อเล่น</span>
+          <input type="text" x-model="newPatient.nickname" class="input" placeholder="ลุงชัย" /></label>
+        <label><span class="text-xs text-slate-500">เบอร์โทร</span>
+          <input type="tel" inputmode="tel" x-model="newPatient.phone" class="input" placeholder="08x-xxx-xxxx" /></label>
+      </div>
+
       <div class="grid grid-cols-[1fr_auto] gap-3 items-end">
         <label class="block">
           <span class="text-xs text-slate-500">
@@ -114,6 +121,15 @@
       <label class="block">
         <span class="text-xs text-slate-500">Diagnosis</span>
         <input type="text" x-model="newPatient.dx" class="input" placeholder="L MCA infarct, R hemiparesis" />
+      </label>
+
+      <label class="block">
+        <span class="text-xs text-slate-500">ที่อยู่ (เคสโฮม)</span>
+        <textarea x-model="newPatient.address" class="input min-h-[50px]" placeholder="บ้านเลขที่ ... ต. ... อ. ..."></textarea>
+      </label>
+      <label class="block">
+        <span class="text-xs text-slate-500">ลิงก์ Google Maps (วางลิงก์หมุดบ้าน)</span>
+        <input type="url" x-model="newPatient.mapUrl" class="input" placeholder="https://maps.app.goo.gl/..." />
       </label>
 
       <div class="grid grid-cols-2 gap-3">
@@ -160,8 +176,9 @@
 <script>
 function patientList() {
   const blankPatient = () => ({
-    hn: '', firstName: '', lastInitial: '', dob: '', sex: '',
+    hn: '', firstName: '', lastInitial: '', nickname: '', dob: '', sex: '',
     dominantSide: '', dx: '', affectedSide: '', onsetDate: '',
+    phone: '', address: '', mapUrl: '',
     template: 'stroke',
   });
 

@@ -44,6 +44,19 @@
     <div class="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden">
       <div class="h-full bg-sky-500 transition-all" :style="`width: ${completion}%`"></div>
     </div>
+    <!-- Tab bar -->
+    <nav class="mt-2 -mx-4 px-2 border-t border-slate-100">
+      <div class="flex gap-1 overflow-x-auto no-scrollbar pt-2">
+        <template x-for="t in tabs" :key="t.id">
+          <button @click="switchTab(t.id)"
+            :class="activeTab === t.id ? 'tab-on' : 'tab'"
+            class="shrink-0 flex items-center gap-1">
+            <span x-text="t.icon"></span>
+            <span x-text="t.label"></span>
+          </button>
+        </template>
+      </div>
+    </nav>
   </header>
 
   <!-- Template indicator -->
@@ -52,8 +65,10 @@
     <span x-show="prevVisit" class="text-slate-400">· เปรียบกับ visit ก่อน · ตัวเลขสีจาง = ค่าเดิม</span>
   </div>
 
-  <!-- Sections (each rendered once; visibility controlled by template) -->
+  <!-- Tab content -->
   <div>
+    <!-- TAB: ข้อมูล -->
+    <div x-show="activeTab === 'info'">
       <!-- Section: Patient Info -->
       <section x-show="sections.includes('info')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('info')" class="w-full px-4 py-3 flex justify-between items-center text-left">
@@ -119,6 +134,10 @@
         </div>
       </section>
 
+    </div><!-- /TAB info -->
+
+    <!-- TAB: Motor -->
+    <div x-show="activeTab === 'motor'">
       <!-- Section: Brunnstrom -->
       <section x-show="sections.includes('brun')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('brun')" class="w-full px-4 py-3 flex justify-between items-center text-left">
@@ -225,6 +244,10 @@
         </div>
       </section>
 
+    </div><!-- /TAB motor -->
+
+    <!-- TAB: Body Chart -->
+    <div x-show="activeTab === 'chart'">
       <!-- Section: Body Chart Canvas -->
       <section x-show="sections.includes('bodychart')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('bodychart')" class="w-full px-4 py-3 flex justify-between items-center text-left">
@@ -276,6 +299,10 @@
         </div>
       </section>
 
+    </div><!-- /TAB chart -->
+
+    <!-- TAB: Function -->
+    <div x-show="activeTab === 'func'">
       <!-- Section: Balance -->
       <section x-show="sections.includes('bal')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('bal')" class="w-full px-4 py-3 flex justify-between items-center text-left">
@@ -358,6 +385,10 @@
         </div>
       </section>
 
+    </div><!-- /TAB func -->
+
+    <!-- TAB: Plan -->
+    <div x-show="activeTab === 'plan'">
       <!-- Section: Special -->
       <section x-show="sections.includes('special')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('special')" class="w-full px-4 py-3 flex justify-between items-center text-left">
@@ -406,6 +437,61 @@
           </label>
         </div>
       </section>
+    </div><!-- /TAB plan -->
+
+    <!-- TAB: โพย (reference cheatsheet ของนักกายภาพ) -->
+    <div x-show="activeTab === 'ref'" class="space-y-3">
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+        📖 แผ่นโพยอ้างอิงส่วนตัว — สรุปความหมายของคะแนนสเกล + ช่องจดโปรโตคอลของคุณเอง (กันลืมตอนตรวจภาคสนาม)
+      </div>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 font-semibold border-b border-slate-100">💪 Brunnstrom Stage</div>
+        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
+          <p><b>1</b> Flaccid · ไม่มี movement</p>
+          <p><b>2</b> เริ่มมี synergy · spasticity เริ่มขึ้น</p>
+          <p><b>3</b> Synergy ชัด · spasticity สูงสุด</p>
+          <p><b>4</b> เริ่มมี movement นอก synergy · spasticity ลด</p>
+          <p><b>5</b> Movement นอก synergy ได้มากขึ้น</p>
+          <p><b>6</b> Movement เกือบปกติ · coordination ดี</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 font-semibold border-b border-slate-100">⚡ Modified Ashworth (MAS)</div>
+        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
+          <p><b>0</b> ไม่มี tone เพิ่ม</p>
+          <p><b>1</b> เพิ่มเล็กน้อย · catch แล้วปล่อย ปลายช่วง</p>
+          <p><b>1+</b> เพิ่มเล็กน้อย · catch + ต้านน้อย &lt;½ ROM</p>
+          <p><b>2</b> เพิ่มชัดเกือบทั้ง ROM · ขยับ passive ได้</p>
+          <p><b>3</b> เพิ่มมาก · passive ยาก</p>
+          <p><b>4</b> Rigid · งอ/เหยียดไม่ได้</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 font-semibold border-b border-slate-100">🏋️ MMT</div>
+        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
+          <p><b>0</b> ไม่มีการหดตัว · <b>1</b> คลำได้แต่ไม่ขยับ · <b>2</b> ขยับได้ถ้าตัดแรงโน้มถ่วง</p>
+          <p><b>3</b> ต้านแรงโน้มถ่วงได้ · <b>4</b> ต้านแรงต้านปานกลาง · <b>5</b> ปกติ</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 font-semibold border-b border-slate-100">🏠 Barthel Index (การแปลผล)</div>
+        <div class="px-4 py-3 text-sm space-y-1 text-slate-600">
+          <p>0–20 dependent · 21–60 severe · 61–90 moderate · 91–99 slight · 100 independent</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 font-semibold border-b border-slate-100">📝 โพยของฉัน (จดเอง)</div>
+        <div class="px-4 py-3">
+          <textarea x-model="data.refNote" class="input min-h-[120px]" placeholder="จดโปรโตคอล/พารามิเตอร์ที่ใช้บ่อยกันลืม เช่น sets/reps, positioning, จุดสังเกต..."></textarea>
+          <p class="text-xs text-slate-400 mt-1">โน้ตนี้ติดไปกับ visit · ก๊อปจาก visit ก่อนอัตโนมัติ</p>
+        </div>
+      </section>
+    </div><!-- /TAB ref -->
   </div>
 
   <!-- Sticky action bar — auto-saves, just confirm when done -->

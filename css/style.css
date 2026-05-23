@@ -125,6 +125,23 @@ select.input {
 .btn-mic.recording { background: #fee2e2; border-color: #fca5a5; animation: pulse 1s infinite; }
 @keyframes pulse { 50% { opacity: 0.6; } }
 
+/* Tabs */
+.tab, .tab-on {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.tab { background: transparent; color: #64748b; }
+.tab:hover { background: #f1f5f9; color: #334155; }
+.tab-on { background: #0284c7; color: #fff; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Hide on cloak */
 [x-cloak] { display: none !important; }
 
