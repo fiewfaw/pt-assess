@@ -549,7 +549,7 @@ function visitForm() {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = stroke.color;
         ctx.fillStyle = stroke.color;
-        ctx.lineWidth = stroke.size;
+        ctx.lineWidth = stroke.size * 2.5;
       }
       const pts = stroke.points;
       const W = canvas.width, H = canvas.height;
@@ -557,7 +557,7 @@ function visitForm() {
         const p = pts[0];
         ctx.beginPath();
         ctx.arc(p[0] * W, p[1] * H,
-                (stroke.tool === 'eraser' ? stroke.size * 3 : stroke.size / 2), 0, Math.PI * 2);
+                (stroke.tool === 'eraser' ? stroke.size * 3 : stroke.size * 1.25), 0, Math.PI * 2);
         ctx.fill();
         return;
       }
