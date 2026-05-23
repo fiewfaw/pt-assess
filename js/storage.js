@@ -105,11 +105,11 @@ class LocalStorageBackend {
 class GitHubBackend {
   constructor({ pat, owner, repo, branch = 'main' }) {
     this.name = 'github';
-    this.pat = pat;
-    this.owner = owner;
-    this.repo = repo;
-    this.branch = branch;
-    this.api = `https://api.github.com/repos/${owner}/${repo}/contents`;
+    this.pat = (pat || '').trim();
+    this.owner = (owner || '').trim();
+    this.repo = (repo || '').trim();
+    this.branch = (branch || 'main').trim();
+    this.api = `https://api.github.com/repos/${this.owner}/${this.repo}/contents`;
     this.local = new LocalStorageBackend(); // cache layer
   }
 
