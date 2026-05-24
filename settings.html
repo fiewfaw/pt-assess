@@ -25,10 +25,39 @@
   <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
     <h2 class="font-semibold mb-2">Storage backend</h2>
     <p class="text-sm">
-      ตอนนี้: <span class="font-semibold capitalize" x-text="currentBackend"></span>
-      <span x-show="currentBackend === 'github'" class="text-emerald-600">✓ cloud-synced</span>
+      ตอนนี้: <span class="font-semibold" x-text="backendLabel"></span>
+      <span x-show="currentBackend === 'appsscript'" class="text-emerald-600">✓ sync ทุก device (คอม·แท็บเล็ต·iPhone)</span>
+      <span x-show="currentBackend === 'github'" class="text-emerald-600">✓ cloud-synced (คอมเท่านั้น)</span>
       <span x-show="currentBackend === 'local'" class="text-slate-500">(local only, ไม่ sync ข้าม device)</span>
     </p>
+  </div>
+
+  <!-- Apps Script (Google) sync — works on ALL devices -->
+  <div class="bg-white rounded-xl border-2 border-emerald-300 p-4 mb-4 space-y-3">
+    <h2 class="font-semibold text-emerald-700">☁️ Apps Script sync (Google) — แนะนำ</h2>
+    <p class="text-xs text-slate-500 leading-relaxed">
+      เก็บข้อมูลใน <strong>Google Drive</strong> ผ่าน Apps Script Web App
+      → <strong>มือถือ+แท็บเล็ตเข้าได้ทุกเครื่อง</strong> (ต่างจาก GitHub ที่มือถือเข้าไม่ได้)
+      · กรอกที่คอม → เด้งขึ้นแท็บเล็ตทันที
+    </p>
+
+    <label class="block">
+      <span class="text-xs text-slate-500">Apps Script Web App URL</span>
+      <input type="text" x-model="appsUrl" class="input" placeholder="https://script.google.com/macros/s/.../exec" />
+      <span class="text-xs text-slate-400">ลงท้ายด้วย <code>/exec</code> · ใส่อันเดียวกันทุกเครื่อง</span>
+    </label>
+
+    <div class="flex gap-2 pt-1">
+      <button @click="testApps()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg">
+        🔍 ทดสอบ
+      </button>
+      <button @click="saveApps()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg">
+        💾 บันทึก + ใช้
+      </button>
+    </div>
+    <button x-show="appsUrl" @click="clearApps()" class="text-xs text-slate-400 hover:underline">ลบ URL (กลับไปใช้ GitHub/local)</button>
+
+    <div x-show="appsTestResult" :class="appsTestOk ? 'text-emerald-600' : 'text-red-600'" class="text-sm mt-1" x-text="appsTestResult"></div>
   </div>
 
   <!-- GitHub setup -->
@@ -113,15 +142,65 @@ function settings() {
   return {
     currentBackend: 'local',
     github: { owner: '', repo: 'pt-data', branch: 'main', pat: '' },
+    appsUrl: '',
+    appsTestResult: '',
+    appsTestOk: false,
     testResult: '',
     testOk: false,
     exportText: '',
     exportInfo: '',
 
+    get backendLabel() {
+      return { appsscript: 'Apps Script (Google)', github: 'GitHub', local: 'Local' }[this.currentBackend] || this.currentBackend;
+    },
+
     init() {
       const s = window.Storage.Settings.get();
       if (s.github) Object.assign(this.github, s.github);
+      this.appsUrl = s.appsUrl || '';
       this.currentBackend = window.Storage.get().name;
+    },
+
+    async testApps() {
+      this.appsUrl = (this.appsUrl || '').trim();
+      this.appsTestResult = 'ทดสอบ...';
+      this.appsTestOk = false;
+      if (!/^https:\/\/script\.google\.com\/.*\/exec$/.test(this.appsUrl)) {
+        this.appsTestResult = '✗ URL ต้องเป็น script.google.com/.../exec';
+        return;
+      }
+      try {
+        const be = new window.Storage.AppsScriptBackend({ url: this.appsUrl });
+        const ok = await be.ping();
+        if (ok) {
+          const patients = await be.listPatients();
+          this.appsTestOk = true;
+          this.appsTestResult = `✓ เชื่อมต่อได้ · พบคนไข้ ${patients.length} คน`;
+        } else {
+          this.appsTestResult = '✗ ตอบกลับไม่ถูกต้อง (เช็ค deploy + สิทธิ์ Anyone)';
+        }
+      } catch (e) {
+        this.appsTestResult = `✗ ${e.message} (มักเพราะยังไม่ deploy แบบ "Anyone")`;
+      }
+    },
+
+    saveApps() {
+      this.appsUrl = (this.appsUrl || '').trim();
+      if (this.appsUrl && !/^https:\/\/script\.google\.com\/.*\/exec$/.test(this.appsUrl)) {
+        alert('URL ต้องเป็น script.google.com/.../exec');
+        return;
+      }
+      window.Storage.Settings.update({ appsUrl: this.appsUrl });
+      this.currentBackend = window.Storage.get().name;
+      alert('บันทึกแล้ว — ใช้ Apps Script sync · reload');
+      location.reload();
+    },
+
+    clearApps() {
+      if (!confirm('ลบ Apps Script URL? จะกลับไปใช้ GitHub/local')) return;
+      this.appsUrl = '';
+      window.Storage.Settings.update({ appsUrl: '' });
+      location.reload();
     },
 
     async testConnection() {

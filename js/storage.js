@@ -266,6 +266,168 @@ class GitHubBackend {
   }
 }
 
+// ---------- Apps Script Backend (mobile-safe sync over Google) ----------
+//
+// Why: tablet + iPhone can reach script.google.com but NOT api.github.com,
+// so GitHubBackend fails on mobile. Apps Script works on every device.
+//   reads  = JSONP  (inject <script>?callback=cb  -> cb({...}); no CORS)
+//   writes = POST mode:'no-cors' fire-and-forget (can't read response)
+//            -> optimistic + always cache to localStorage; fall back on fail.
+
+class AppsScriptBackend {
+  constructor({ url }) {
+    this.name = 'appsscript';
+    this.url = (url || '').trim();
+    this.local = new LocalStorageBackend(); // cache + fallback
+    this.timeout = 12000;
+  }
+
+  // JSONP read: script-tag bypasses CORS (mobile-safe)
+  _jsonp(params) {
+    return new Promise((resolve, reject) => {
+      const cb = 'ptcb_' + Math.random().toString(36).slice(2) + Date.now();
+      const qs = new URLSearchParams({ ...params, callback: cb }).toString();
+      const script = document.createElement('script');
+      let done = false;
+      const cleanup = () => {
+        done = true;
+        try { delete window[cb]; } catch (_) { window[cb] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      };
+      const timer = setTimeout(() => {
+        if (done) return;
+        cleanup();
+        reject(new Error('JSONP timeout'));
+      }, this.timeout);
+      window[cb] = (data) => {
+        if (done) return;
+        clearTimeout(timer);
+        cleanup();
+        resolve(data);
+      };
+      script.onerror = () => {
+        if (done) return;
+        clearTimeout(timer);
+        cleanup();
+        reject(new Error('JSONP load error'));
+      };
+      script.src = this.url + (this.url.includes('?') ? '&' : '?') + qs;
+      document.head.appendChild(script);
+    });
+  }
+
+  // no-cors POST: fire-and-forget (response is opaque, can't be read)
+  async _post(body) {
+    await fetch(this.url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  // patients
+
+  async listPatients() {
+    try {
+      const r = await this._jsonp({ action: 'list' });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'list failed');
+      const patients = r.patients || [];
+      for (const p of patients) await this.local.savePatient(p);
+      return patients;
+    } catch (e) {
+      console.warn('AppsScript list failed, fallback local', e);
+      return this.local.listPatients();
+    }
+  }
+
+  async getPatient(hn) {
+    try {
+      const r = await this._jsonp({ action: 'patient', hn });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'patient failed');
+      if (r.patient) await this.local.savePatient(r.patient);
+      return r.patient || null;
+    } catch (e) {
+      console.warn('AppsScript getPatient failed, fallback local', e);
+      return this.local.getPatient(hn);
+    }
+  }
+
+  async savePatient(patient) {
+    patient.updatedAt = new Date().toISOString();
+    if (!patient.createdAt) patient.createdAt = patient.updatedAt;
+    await this.local.savePatient(patient); // optimistic + cache
+    try {
+      await this._post({ action: 'savePatient', patient });
+    } catch (e) {
+      console.warn('AppsScript savePatient failed, kept local only', e);
+    }
+    return patient;
+  }
+
+  async deletePatient(hn) {
+    // archive instead of delete (safer for clinical data)
+    const p = await this.getPatient(hn);
+    if (p) await this.savePatient({ ...p, archived: true, archivedAt: new Date().toISOString() });
+  }
+
+  // visits
+
+  async listVisits(hn) {
+    try {
+      const r = await this._jsonp({ action: 'visits', hn });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'visits failed');
+      const visits = r.visits || [];
+      for (const v of visits) await this.local.saveVisit(hn, v);
+      return visits.sort((a, b) => String(b.visitDate || '').localeCompare(String(a.visitDate || '')));
+    } catch (e) {
+      console.warn('AppsScript listVisits failed, fallback local', e);
+      return this.local.listVisits(hn);
+    }
+  }
+
+  async getVisit(hn, visitId) {
+    try {
+      const r = await this._jsonp({ action: 'visit', hn, id: visitId });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'visit failed');
+      if (r.visit) await this.local.saveVisit(hn, r.visit);
+      return r.visit || null;
+    } catch (e) {
+      console.warn('AppsScript getVisit failed, fallback local', e);
+      return this.local.getVisit(hn, visitId);
+    }
+  }
+
+  async getLatestVisit(hn) {
+    const visits = await this.listVisits(hn);
+    return visits[0] || null;
+  }
+
+  async saveVisit(hn, visit) {
+    if (!visit.visitId) {
+      const existing = await this.listVisits(hn);
+      const nums = existing.map(v => parseInt(v.visitId, 10)).filter(n => !isNaN(n));
+      const next = (nums.length ? Math.max(...nums) : 0) + 1;
+      visit.visitId = String(next).padStart(3, '0');
+    }
+    if (!visit.createdAt) visit.createdAt = new Date().toISOString();
+    if (!visit.visitDate) visit.visitDate = new Date().toISOString().slice(0, 10);
+    await this.local.saveVisit(hn, visit); // optimistic + cache
+    try {
+      await this._post({ action: 'saveVisit', hn, visit });
+    } catch (e) {
+      console.warn('AppsScript saveVisit failed, kept local only', e);
+    }
+    return visit;
+  }
+
+  // connectivity test for settings page ("alive" via JSONP-able action)
+  async ping() {
+    const r = await this._jsonp({ action: 'list' });
+    return !!(r && r.ok);
+  }
+}
+
 // ---------- Factory + Settings ----------
 
 const Settings = {
@@ -276,6 +438,10 @@ const Settings = {
 
 function getStorage() {
   const s = Settings.get();
+  // Apps Script first — only backend that works on tablet + iPhone
+  if (s.appsUrl && s.appsUrl.trim()) {
+    return new AppsScriptBackend({ url: s.appsUrl });
+  }
   if (s.github?.pat && s.github?.owner && s.github?.repo) {
     return new GitHubBackend(s.github);
   }
@@ -307,4 +473,4 @@ function visitDiff(prev, curr) {
 
 // Export to window for non-module scripts
 window.Storage = { get: getStorage, Settings, visitDiff,
-                   LocalStorageBackend, GitHubBackend };
+                   LocalStorageBackend, GitHubBackend, AppsScriptBackend };
