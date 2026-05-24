@@ -11,6 +11,9 @@
  *   - Saves new visit with diff log against previous
  */
 
+// Visit submit endpoint (Apps Script Web App — write-only, lands in private Drive/Sheet)
+const VISIT_API_URL = 'https://script.google.com/macros/s/AKfycbznwuHG1U3ZJiQl6QyjgajGFDdNWfmCe3p-1J59XTcmYJ9C8wIBMS1CPaTA6WH6CX6z/exec';
+
 function visitForm() {
   const blankData = () => ({
     date: new Date().toISOString().slice(0, 10),
@@ -43,6 +46,8 @@ function visitForm() {
     saved: true,
     saving: false,
     lastSavedAt: null,
+    submitting: false,
+    submitMsg: '',
     _initialized: false,
     template: 'stroke',
     activeTab: 'note',
@@ -352,6 +357,57 @@ function visitForm() {
       clearTimeout(this._saveTimer);
       if (!this.saved) await this._autoSave();
       location.href = `patient.html?hn=${this.hn}`;
+    },
+
+    // Send the full visit (+ patient contact) to the Apps Script cloud archive.
+    // Fire-and-forget (no-cors) — works on the tablet without GitHub PAT.
+    async submitToCloud() {
+      this.submitting = true;
+      this.submitMsg = '';
+      try {
+        if (!this.saved) await this._autoSave();
+        const p = this.patient || {};
+        const payload = {
+          patient: {
+            hn: this.hn,
+            nickname: p.nickname || '',
+            firstName: p.firstName || '',
+            lastInitial: p.lastInitial || '',
+            phone: p.phone || '',
+            address: p.address || '',
+            mapUrl: p.mapUrl || '',
+            sex: p.sex || '',
+            age: p.age || '',
+            dx: p.dx || '',
+            dominantSide: p.dominantSide || '',
+            affectedSide: p.affectedSide || '',
+            onsetDate: p.onsetDate || '',
+            template: p.template || this.template,
+          },
+          visit: {
+            hn: this.hn,
+            visitId: this.visitId || '',
+            visitDate: this.data.date,
+            visitNumber: this.visitNumber,
+            template: this.template,
+            data: this.data,
+            submittedAt: new Date().toISOString(),
+          },
+        };
+        await fetch(VISIT_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+        });
+        this.submitMsg = '✓ ส่งแล้ว';
+      } catch (e) {
+        console.error('submitToCloud failed', e);
+        this.submitMsg = '✗ ส่งไม่สำเร็จ (ข้อมูลยังอยู่เครื่อง ลองใหม่ได้)';
+      } finally {
+        this.submitting = false;
+        setTimeout(() => { this.submitMsg = ''; }, 5000);
+      }
     },
 
     timeAgo(date) {
