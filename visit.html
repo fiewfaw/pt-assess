@@ -462,6 +462,74 @@
         </div>
       </section>
 
+      <!-- Section: HADS (Thai) -->
+      <section x-show="sections.includes('hads') && inTab('hads')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('hads')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🧠 HADS <span class="text-xs text-sky-600 font-normal" x-text="`(A ${hadsAnxiety} · D ${hadsDepression})`"></span></span>
+          <span x-text="open.hads ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.hads" x-collapse class="px-4 pb-4 space-y-3">
+          <button type="button" @click="infoOpen.hads = !infoOpen.hads" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.hads ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล'"></span>
+          </button>
+          <div x-show="infoOpen.hads" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>แต่ละ subscale 0–21 · 0–7 ปกติ · 8–10 ก้ำกึ่ง · ≥11 ผิดปกติ</p>
+            <p>ข้อคี่ = Anxiety · ข้อคู่ = Depression · ตอบช่วง 1 สัปดาห์ที่ผ่านมา</p>
+          </div>
+          <div class="flex gap-2 text-sm font-semibold flex-wrap">
+            <span class="px-2 py-1 rounded bg-amber-50 text-amber-700" x-text="`Anxiety ${hadsAnxiety}/21 — ${hadsInterp(hadsAnxiety)}`"></span>
+            <span class="px-2 py-1 rounded bg-indigo-50 text-indigo-700" x-text="`Depression ${hadsDepression}/21 — ${hadsInterp(hadsDepression)}`"></span>
+          </div>
+          <template x-for="item in hads_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['hads', item.key]) !== null ? 'prev ' + prevValue(['hads', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in item.opts">
+                  <button type="button" @click="data.hads[item.key] = opt.v"
+                    :class="pillClass(['hads', item.key], opt.v)"
+                    x-text="opt.label" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: FES-I (Thai) -->
+      <section x-show="sections.includes('fesi') && inTab('fesi')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('fesi')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🚶 FES-I (กลัวหกล้ม) <span class="text-xs text-sky-600 font-normal" x-text="`(${fesiTotal}/64${fesiInterp ? ' · ' + fesiInterp : ''})`"></span></span>
+          <span x-text="open.fesi ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.fesi" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.fesi = !infoOpen.fesi" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.fesi ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล'"></span>
+          </button>
+          <div x-show="infoOpen.fesi" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>16 ข้อ ข้อละ 1–4 · รวม 16–64 · ยิ่งมากยิ่งกลัวหกล้มมาก</p>
+            <p>แนวเทียบ: 16–19 ต่ำ · 20–27 ปานกลาง · ≥28 สูง</p>
+          </div>
+          <template x-for="item in fesi_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['fesi', item.key]) !== null ? 'prev ' + prevValue(['fesi', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in fesi_opts">
+                  <button type="button" @click="data.fesi[item.key] = opt.v"
+                    :class="pillClass(['fesi', item.key], opt.v)"
+                    x-text="opt.label" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
     </div>
 
     <div>

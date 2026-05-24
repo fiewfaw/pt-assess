@@ -24,6 +24,8 @@ function visitForm() {
     mas: {},
     mmt: {},
     sensation: {},
+    hads: {},        // Thai HADS — item(1-14) -> 0-3
+    fesi: {},        // Thai FES-I — item(1-16) -> 1-4
     bodyChart: [],   // array of strokes [{tool, color, size, points: [[x,y],...]}]
     noteCanvas: [],  // handwriting notepad strokes (tab 1)
     balance: {}, bbs: '',
@@ -59,13 +61,13 @@ function visitForm() {
     sectionTab: {
       info: 'note', bodychart: 'note',
       vs: 'assess', cog: 'assess', brun: 'assess', mas: 'assess', mmt: 'assess',
-      sens: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
+      sens: 'assess', hads: 'assess', fesi: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
       plan: 'plan',
     },
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
-            mmt: true, sens: true, bodychart: true, bal: true, mob: true, bi: true,
+            mmt: true, sens: true, hads: true, fesi: true, bodychart: true, bal: true, mob: true, bi: true,
             special: true, plan: true },
-    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false },
+    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false },
 
     // Body chart canvas state
     chartTool: 'pain',
@@ -120,6 +122,61 @@ function visitForm() {
         opts: [{v:0,label:'incont'},{v:5,label:'occ acc'},{v:10,label:'cont'}] },
       { key: 'bladder',  label: 'Bladder',
         opts: [{v:0,label:'incont'},{v:5,label:'occ acc'},{v:10,label:'cont'}] },
+    ],
+
+    // Thai HADS (Nilchaikovit 1996) — odd=Anxiety, even=Depression. Options carry per-item scores.
+    hads_items: [
+      { key:'h1',  sub:'A', label:'1. ฉันรู้สึกตึงเครียด',
+        opts:[{v:3,label:'เป็นส่วนใหญ่'},{v:2,label:'บ่อยครั้ง'},{v:1,label:'เป็นบางครั้ง'},{v:0,label:'ไม่เป็นเลย'}] },
+      { key:'h2',  sub:'D', label:'2. ฉันรู้สึกเพลิดเพลินใจกับสิ่งที่เคยชอบได้',
+        opts:[{v:0,label:'เหมือนเดิม'},{v:1,label:'ไม่มากเท่าก่อน'},{v:2,label:'เล็กน้อย'},{v:3,label:'เกือบไม่มี'}] },
+      { key:'h3',  sub:'A', label:'3. ฉันรู้สึกกลัวเหมือนจะมีเรื่องไม่ดีเกิดขึ้น',
+        opts:[{v:3,label:'มี+ค่อนข้างรุนแรง'},{v:2,label:'มีแต่ไม่มาก'},{v:1,label:'เล็กน้อย'},{v:0,label:'ไม่มีเลย'}] },
+      { key:'h4',  sub:'D', label:'4. ฉันหัวเราะ/มีอารมณ์ขันได้',
+        opts:[{v:0,label:'เหมือนเดิม'},{v:1,label:'ไม่มากนัก'},{v:2,label:'มีน้อย'},{v:3,label:'ไม่มีเลย'}] },
+      { key:'h5',  sub:'A', label:'5. ฉันมีความคิดวิตกกังวล',
+        opts:[{v:3,label:'เป็นส่วนใหญ่'},{v:2,label:'บ่อยครั้ง'},{v:1,label:'บางครั้งไม่บ่อย'},{v:0,label:'นานๆครั้ง'}] },
+      { key:'h6',  sub:'D', label:'6. ฉันรู้สึกแจ่มใสเบิกบาน',
+        opts:[{v:3,label:'ไม่มีเลย'},{v:2,label:'ไม่บ่อยนัก'},{v:1,label:'เป็นบางครั้ง'},{v:0,label:'เป็นส่วนใหญ่'}] },
+      { key:'h7',  sub:'A', label:'7. ฉันทำตัวตามสบาย รู้สึกผ่อนคลายได้',
+        opts:[{v:0,label:'ได้ดีมาก'},{v:1,label:'ได้ทั่วไป'},{v:2,label:'ไม่บ่อยนัก'},{v:3,label:'ไม่ได้เลย'}] },
+      { key:'h8',  sub:'D', label:'8. ฉันคิด/ทำอะไรเชื่องช้าลงกว่าเดิม',
+        opts:[{v:3,label:'เกือบตลอดเวลา'},{v:2,label:'บ่อยมาก'},{v:1,label:'เป็นบางครั้ง'},{v:0,label:'ไม่เป็นเลย'}] },
+      { key:'h9',  sub:'A', label:'9. ฉันไม่สบายใจจนปั่นป่วนในท้อง',
+        opts:[{v:0,label:'ไม่เป็นเลย'},{v:1,label:'เป็นบางครั้ง'},{v:2,label:'ค่อนข้างบ่อย'},{v:3,label:'บ่อยมาก'}] },
+      { key:'h10', sub:'D', label:'10. ฉันปล่อยเนื้อปล่อยตัว ไม่สนใจตนเอง',
+        opts:[{v:3,label:'ใช่'},{v:2,label:'ไม่ค่อยใส่ใจ'},{v:1,label:'ใส่ใจน้อยลง'},{v:0,label:'เหมือนเดิม'}] },
+      { key:'h11', sub:'A', label:'11. ฉันกระสับกระส่าย อยู่นิ่งไม่ได้',
+        opts:[{v:3,label:'มากทีเดียว'},{v:2,label:'ค่อนข้างมาก'},{v:1,label:'ไม่มากนัก'},{v:0,label:'ไม่เป็นเลย'}] },
+      { key:'h12', sub:'D', label:'12. ฉันมองอนาคตด้วยความเบิกบานใจ',
+        opts:[{v:0,label:'มากเท่าที่เคย'},{v:1,label:'ค่อนข้างน้อยลง'},{v:2,label:'น้อยกว่าเคย'},{v:3,label:'เกือบไม่มี'}] },
+      { key:'h13', sub:'A', label:'13. ฉันผวา/ตกใจขึ้นมากระทันหัน',
+        opts:[{v:3,label:'บ่อยมาก'},{v:2,label:'ค่อนข้างบ่อย'},{v:1,label:'ไม่บ่อยนัก'},{v:0,label:'ไม่มีเลย'}] },
+      { key:'h14', sub:'D', label:'14. ฉันเพลิดเพลินกับอ่านหนังสือ/ฟังวิทยุ/ดูทีวี ฯลฯ',
+        opts:[{v:0,label:'เป็นส่วนใหญ่'},{v:1,label:'เป็นบางครั้ง'},{v:2,label:'ไม่บ่อยนัก'},{v:3,label:'น้อยมาก'}] },
+    ],
+
+    // Thai FES-I (Thiamwong 2011) — 16 items, all 1-4 (ยิ่งมากยิ่งกลัวหกล้มมาก)
+    fesi_opts: [
+      {v:1,label:'1 ไม่กังวล'},{v:2,label:'2 กังวลน้อย'},{v:3,label:'3 ค่อนข้างกังวล'},{v:4,label:'4 กังวลมาก'},
+    ],
+    fesi_items: [
+      { key:'f1',  label:'1. ทำความสะอาดบ้าน' },
+      { key:'f2',  label:'2. ใส่/ถอดเสื้อผ้า' },
+      { key:'f3',  label:'3. หุงข้าว ทำกับข้าวง่ายๆ' },
+      { key:'f4',  label:'4. อาบน้ำ' },
+      { key:'f5',  label:'5. ไปซื้อของ' },
+      { key:'f6',  label:'6. ลุก-นั่งเก้าอี้' },
+      { key:'f7',  label:'7. ขึ้น-ลงบันได' },
+      { key:'f8',  label:'8. เดินนอกบ้าน/รอบบ้าน' },
+      { key:'f9',  label:'9. เอื้อมหยิบของเหนือศีรษะ/ก้มเก็บของ' },
+      { key:'f10', label:'10. รับโทรศัพท์' },
+      { key:'f11', label:'11. เดินบนพื้นลื่น' },
+      { key:'f12', label:'12. ไปเยี่ยมญาติ/เพื่อน' },
+      { key:'f13', label:'13. ไปในที่คนแออัด เช่น ตลาดสด' },
+      { key:'f14', label:'14. เดินบนพื้นไม่เรียบ' },
+      { key:'f15', label:'15. เดินขึ้น-ลงทางลาดชัน' },
+      { key:'f16', label:'16. ไปร่วมงานชุมชน เช่น ทำบุญที่วัด/มัสยิด' },
     ],
 
     async init() {
@@ -244,6 +301,30 @@ function visitForm() {
     get prevBI() {
       if (!this.prevData?.bi) return null;
       return Object.values(this.prevData.bi).reduce((s,v) => s + (Number(v)||0), 0);
+    },
+
+    // ---- HADS / FES-I scoring ----
+    _hadsSum(sub) {
+      return this.hads_items
+        .filter(it => it.sub === sub)
+        .reduce((s, it) => s + (Number(this.data.hads?.[it.key]) || 0), 0);
+    },
+    get hadsAnxiety() { return this._hadsSum('A'); },
+    get hadsDepression() { return this._hadsSum('D'); },
+    hadsInterp(score) {
+      if (score >= 11) return 'ผิดปกติ (case)';
+      if (score >= 8) return 'ก้ำกึ่ง';
+      return 'ปกติ';
+    },
+    get fesiTotal() {
+      return this.fesi_items.reduce((s, it) => s + (Number(this.data.fesi?.[it.key]) || 0), 0);
+    },
+    get fesiInterp() {
+      const t = this.fesiTotal;
+      if (t === 0) return '';
+      if (t >= 28) return 'กังวลหกล้มสูง';
+      if (t >= 20) return 'กังวลปานกลาง';
+      return 'กังวลต่ำ';
     },
 
     get completion() {

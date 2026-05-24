@@ -45,6 +45,13 @@ const Templates = {
     sections: ['info', 'vs', 'asia', 'mas', 'mmt', 'sens', 'mob', 'bi', 'plan'],
     stub: true,
   },
+  complex: {
+    id: 'complex',
+    name: 'Multi-system / Complex',
+    icon: '🎗️',
+    description: 'เคสซับซ้อนหลายระบบ (เช่น post-cancer + จิตใจ + ทรงตัว) — กว้าง ปรับหน้างาน',
+    sections: ['info', 'vs', 'bodychart', 'hads', 'fesi', 'bal', 'mob', 'special', 'plan'],
+  },
   custom: {
     id: 'custom',
     name: 'Custom (pick sections)',
