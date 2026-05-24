@@ -148,8 +148,12 @@ function visitForm() {
           this.data.date = new Date().toISOString().slice(0, 10);
           this.prevData = JSON.parse(JSON.stringify(this.prevVisit.data));
         }
-        // Body chart + notepad are per-visit (don't carry strokes forward)
-        this.data.bodyChart = [];
+        // Body chart carries forward from the previous visit (editable starting
+        // point — like the other progress-note fields). Notepad handwriting
+        // stays per-visit (notes don't carry forward).
+        this.data.bodyChart = this.prevVisit?.data?.bodyChart
+          ? JSON.parse(JSON.stringify(this.prevVisit.data.bodyChart))
+          : [];
         this.data.noteCanvas = [];
         // Determine next visit number
         const visits = await storage.listVisits(this.hn);
