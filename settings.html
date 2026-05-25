@@ -43,7 +43,7 @@
 
     <label class="block">
       <span class="text-xs text-slate-500">Apps Script Web App URL</span>
-      <input type="text" x-model="appsUrl" class="input" placeholder="https://script.google.com/macros/s/.../exec" />
+      <input type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" x-model="appsUrl" class="input" placeholder="https://script.google.com/macros/s/.../exec" />
       <span class="text-xs text-slate-400">ลงท้ายด้วย <code>/exec</code> · ใส่อันเดียวกันทุกเครื่อง</span>
     </label>
 
@@ -161,11 +161,22 @@ function settings() {
       this.currentBackend = window.Storage.get().name;
     },
 
+    _cleanAppsUrl(u) {
+      // keep only printable ASCII — strips spaces, newlines, and every invisible
+      // char (zero-width, soft-hyphen, nbsp, BOM, bidi) that email clients inject
+      // into long URLs for line-wrapping. Apps Script /exec URLs are pure ASCII.
+      return (u || '').replace(/[^\x21-\x7E]/g, '');
+    },
+
+    _validAppsUrl(u) {
+      return /^https:\/\/script\.google\.com\/.+\/exec\/?$/i.test(u);
+    },
+
     async testApps() {
-      this.appsUrl = (this.appsUrl || '').trim();
+      this.appsUrl = this._cleanAppsUrl(this.appsUrl);
       this.appsTestResult = 'ทดสอบ...';
       this.appsTestOk = false;
-      if (!/^https:\/\/script\.google\.com\/.*\/exec$/.test(this.appsUrl)) {
+      if (!this._validAppsUrl(this.appsUrl)) {
         this.appsTestResult = '✗ URL ต้องเป็น script.google.com/.../exec';
         return;
       }
@@ -185,8 +196,8 @@ function settings() {
     },
 
     saveApps() {
-      this.appsUrl = (this.appsUrl || '').trim();
-      if (this.appsUrl && !/^https:\/\/script\.google\.com\/.*\/exec$/.test(this.appsUrl)) {
+      this.appsUrl = this._cleanAppsUrl(this.appsUrl);
+      if (this.appsUrl && !this._validAppsUrl(this.appsUrl)) {
         alert('URL ต้องเป็น script.google.com/.../exec');
         return;
       }
