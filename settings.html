@@ -158,6 +158,11 @@ function settings() {
       const s = window.Storage.Settings.get();
       if (s.github) Object.assign(this.github, s.github);
       this.appsUrl = s.appsUrl || '';
+      // tap-to-setup: ?appsUrl=<encoded> auto-fills + tests (no manual paste)
+      try {
+        const q = new URLSearchParams(location.search).get('appsUrl');
+        if (q) { this.appsUrl = this._cleanAppsUrl(q); this.testApps(); }
+      } catch (_) {}
       this.currentBackend = window.Storage.get().name;
     },
 
