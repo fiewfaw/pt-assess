@@ -59,6 +59,13 @@ const Templates = {
     description: 'MS / demyelinating · spasticity (MAS) + timed tests (6MWT/10MWT/TUG/5STS) + Berg + DGI + FES-I + MFIS (ล้า) + gait/function · plan ตั้งต้นจาก EBP',
     sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'sens', 'timed', 'bbsScale', 'dgi', 'fesi', 'mfis', 'mob', 'bi', 'special', 'plan'],
   },
+  parkinson: {
+    id: 'parkinson',
+    name: 'Parkinson / Parkinsonism',
+    icon: '⚙️',
+    description: 'PD / พาร์กินสันเทียม · rigidity (MAS) + gait (ก้าวสั้น/festination) + balance/falls · timed + Berg + DGI + FES-I · แผน cueing-based (อ้างอิง 612)',
+    sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'timed', 'bbsScale', 'dgi', 'fesi', 'mob', 'bi', 'special', 'plan'],
+  },
   custom: {
     id: 'custom',
     name: 'Custom (pick sections)',

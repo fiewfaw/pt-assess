@@ -289,6 +289,15 @@ function visitForm() {
         'Fatigue: pacing + cooling (กันร้อน/Uhthoff)',
         'Home program + สอนผู้ดูแล',
       ]},
+      parkinson: { title:'💡 แนวทางรักษา PD/Parkinsonism (อ้างอิง 612)', items:[
+        'Cueing แก้ก้าวสั้น/freezing: auditory (เมโทรนอม/นับจังหวะ) · visual (เส้นบนพื้น) · tactile',
+        'Amplitude / BIG — ฝึกก้าวยาว-ใหญ่ ตั้งใจ (ชดเชย bradykinesia)',
+        'Treadmill (external drive) 1.17–1.43 m/s · 20–45 นาที · 3–7/สัปดาห์',
+        'Balance training ท้าทาย (HiBalance / Mini-BESTest-guided) ลดล้ม',
+        'Cognitive Movement Strategies — แยกขั้นตอน · ลด dual-task',
+        'FoG: ถ่ายน้ำหนักก่อนก้าว · เลี้ยวกว้าง · ก้าวข้ามเส้น · focus การเดิน',
+        'Home program + สอนผู้ดูแล · active lifestyle',
+      ]},
     },
 
     async init() {
