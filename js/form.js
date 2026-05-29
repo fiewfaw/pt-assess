@@ -34,6 +34,9 @@ function visitForm() {
     mfis: {},        // MFIS — item(1-21) -> 0-4
     bbsScale: {},    // Berg Balance — item(1-14) -> 0-4
     dgi: {},         // Dynamic Gait Index — item(1-8) -> 0-3
+    mbest: {},       // Mini-BESTest — item(1-14) -> 0-2
+    abc: {},         // ABC Scale — item(1-16) -> 0-100
+    updrs: {},       // MDS-UPDRS Part 3 — item -> 0-4
     timed: {},       // timed/functional tests
     special: {},
     otherFindings: '',
@@ -67,13 +70,15 @@ function visitForm() {
       vs: 'assess', cog: 'assess', brun: 'assess', mas: 'assess', mmt: 'assess',
       sens: 'assess', hads: 'assess', fesi: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
       timed: 'assess', bbsScale: 'assess', dgi: 'assess', mfis: 'assess',
+      mbest: 'assess', abc: 'assess', updrs: 'assess',
       plan: 'plan',
     },
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
             mmt: true, sens: true, hads: true, fesi: true, bodychart: true, bal: true, mob: true, bi: true,
             timed: true, bbsScale: true, dgi: true, mfis: true,
+            mbest: true, abc: true, updrs: true,
             special: true, plan: true },
-    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false },
+    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false },
 
     // Body chart canvas state
     chartTool: 'pain',
@@ -257,6 +262,84 @@ function visitForm() {
       { key:'tandemR',  label:'Tandem ขวา',      unit:'วิ' },
       { key:'romberg',  label:'Romberg หลับตา',  unit:'วิ' },
       { key:'steptest', label:'Step test 3 นาที', unit:'ครั้ง' },
+    ],
+
+    // Mini-BESTest (Thai, SWU — Chaikeeree/Rattanavichit/Boonsinsukh) — 14 ข้อ 0-2 (รวม 28)
+    // ข้อ 3,6 ใช้คะแนนข้างที่แย่กว่า · c=[เกณฑ์ 2, 1, 0]
+    mbest_opts: [0,1,2],
+    mbest_items: [
+      { key:'mb1',  label:'1. นั่งไปยืน', c:['ลุกเองไม่ใช้มือ มั่นคง','ใช้มือช่วยครั้งแรก','ลุกไม่ได้/ใช้มือหลายครั้ง'] },
+      { key:'mb2',  label:'2. ยืนเขย่งปลายเท้า', c:['มั่นคง 3 วิ สูงสุด','ยกส้นไม่สุด/ไม่มั่นคง 3 วิ','≤3 วิ'] },
+      { key:'mb3',  label:'3. ยืนขาเดียว (ข้างแย่กว่า)', c:['20 วิ','<20 วิ','ยืนไม่ได้'] },
+      { key:'mb4',  label:'4. ก้าวชดเชย ด้านหน้า', c:['1 ก้าวกว้าง','>1 ก้าว','ไม่ก้าว/จะล้ม'] },
+      { key:'mb5',  label:'5. ก้าวชดเชย ด้านหลัง', c:['1 ก้าวกว้าง','>1 ก้าว','ไม่ก้าว/จะล้ม'] },
+      { key:'mb6',  label:'6. ก้าวชดเชย ด้านข้าง (ข้างแย่กว่า)', c:['1 ก้าว','หลายก้าว','ล้ม/ก้าวไม่ได้'] },
+      { key:'mb7',  label:'7. ยืนลืมตา พื้นมั่นคง เท้าชิด', c:['30 วิ','<30 วิ','ทำไม่ได้'] },
+      { key:'mb8',  label:'8. ยืนหลับตา พื้นโฟม เท้าชิด', c:['30 วิ','<30 วิ','ทำไม่ได้'] },
+      { key:'mb9',  label:'9. ยืนทางลาด หลับตา', c:['30 วิ แนวแรงโน้มถ่วง','<30 วิ/ตามพื้นผิว','<10 วิ/ไม่พยายาม'] },
+      { key:'mb10', label:'10. เปลี่ยนความเร็วเดิน', c:['เปลี่ยนชัด ไม่เสียทรงตัว','เปลี่ยนไม่ได้/เสียทรงตัว','เปลี่ยนไม่ได้+เสียทรงตัว'] },
+      { key:'mb11', label:'11. เดินหันศีรษะ แนวนอน', c:['หันไม่เปลี่ยนความเร็ว ทรงตัวดี','หัน+ช้าลง','หัน+เสียทรงตัว'] },
+      { key:'mb12', label:'12. เดินหมุนตัวกลับหลังหัน', c:['เท้าชิด เร็ว ≤3 ก้าว','เท้าชิด ช้า ≥4 ก้าว','หมุนเท้าชิดไม่ได้/เสียทรงตัว'] },
+      { key:'mb13', label:'13. ก้าวข้ามสิ่งกีดขวาง', c:['ข้ามได้ เปลี่ยนความเร็วเล็กน้อย','ข้ามแต่แตะ/ระวังเดินช้า','ข้ามไม่ได้/อ้อม'] },
+      { key:'mb14', label:'14. TUG + dual task', c:['ไม่เปลี่ยนชัดเจน','งานที่สองมีผลต่อนับ/เดิน','หยุดนับ/หยุดเดิน'] },
+    ],
+
+    // ABC Scale (Thai, SWU — Nanthapaiboon 2017) — 16 กิจกรรม ข้อละ 0-100% · เฉลี่ย = รวม/16
+    abc_items: [
+      { key:'a1',  label:'1. เดินรอบบ้าน' },
+      { key:'a2',  label:'2. เดินขึ้น/ลงบันได' },
+      { key:'a3',  label:'3. โน้มตัวหยิบรองเท้าที่พื้นด้านหน้า' },
+      { key:'a4',  label:'4. เอื้อมหยิบของบนชั้นระดับสายตา' },
+      { key:'a5',  label:'5. เขย่งหยิบของเหนือศีรษะ' },
+      { key:'a6',  label:'6. ยืนบนเก้าอี้เอื้อมหยิบของ' },
+      { key:'a7',  label:'7. กวาดพื้น' },
+      { key:'a8',  label:'8. เดินออกไปรถที่จอดทางเข้าบ้าน' },
+      { key:'a9',  label:'9. ก้าวขึ้น/ลงรถ' },
+      { key:'a10', label:'10. เดินผ่านที่จอดรถเข้าห้าง/ตลาด' },
+      { key:'a11', label:'11. เดินขึ้น/ลงทางลาด' },
+      { key:'a12', label:'12. เดินในห้าง/ตลาดที่แออัด คนเดินผ่านเร็ว' },
+      { key:'a13', label:'13. ถูกชนขณะเดินในห้าง/ตลาด' },
+      { key:'a14', label:'14. ขึ้น/ลงบันไดเลื่อน (จับราว)' },
+      { key:'a15', label:'15. ขึ้น/ลงบันไดเลื่อน (ถือของ จับราวไม่ได้)' },
+      { key:'a16', label:'16. เดินนอกบ้านบนทางลื่น' },
+    ],
+
+    // MDS-UPDRS Part 3 (motor exam) — 33 scoring items 0-4 (รวม 132) · 0=ปกติ 4=รุนแรง
+    updrs_opts: [0,1,2,3,4],
+    updrs_items: [
+      { key:'u31',   label:'3.1 การพูด' },
+      { key:'u32',   label:'3.2 สีหน้า (facial expression)' },
+      { key:'u33a',  label:'3.3a Rigidity คอ' },
+      { key:'u33b',  label:'3.3b Rigidity แขนขวา' },
+      { key:'u33c',  label:'3.3c Rigidity แขนซ้าย' },
+      { key:'u33d',  label:'3.3d Rigidity ขาขวา' },
+      { key:'u33e',  label:'3.3e Rigidity ขาซ้าย' },
+      { key:'u34a',  label:'3.4a Finger tapping ขวา' },
+      { key:'u34b',  label:'3.4b Finger tapping ซ้าย' },
+      { key:'u35a',  label:'3.5a Hand movements ขวา' },
+      { key:'u35b',  label:'3.5b Hand movements ซ้าย' },
+      { key:'u36a',  label:'3.6a Pronation-supination ขวา' },
+      { key:'u36b',  label:'3.6b Pronation-supination ซ้าย' },
+      { key:'u37a',  label:'3.7a Toe tapping ขวา' },
+      { key:'u37b',  label:'3.7b Toe tapping ซ้าย' },
+      { key:'u38a',  label:'3.8a Leg agility ขวา' },
+      { key:'u38b',  label:'3.8b Leg agility ซ้าย' },
+      { key:'u39',   label:'3.9 ลุกจากเก้าอี้' },
+      { key:'u310',  label:'3.10 การเดิน (gait)' },
+      { key:'u311',  label:'3.11 Freezing of gait' },
+      { key:'u312',  label:'3.12 Postural stability (pull test)' },
+      { key:'u313',  label:'3.13 ท่าทาง (posture)' },
+      { key:'u314',  label:'3.14 Body bradykinesia (รวม)' },
+      { key:'u315a', label:'3.15a Postural tremor มือขวา' },
+      { key:'u315b', label:'3.15b Postural tremor มือซ้าย' },
+      { key:'u316a', label:'3.16a Kinetic tremor มือขวา' },
+      { key:'u316b', label:'3.16b Kinetic tremor มือซ้าย' },
+      { key:'u317a', label:'3.17a Rest tremor แขนขวา' },
+      { key:'u317b', label:'3.17b Rest tremor แขนซ้าย' },
+      { key:'u317c', label:'3.17c Rest tremor ขาขวา' },
+      { key:'u317d', label:'3.17d Rest tremor ขาซ้าย' },
+      { key:'u317e', label:'3.17e Rest tremor ริมฝีปาก/ขากรรไกร' },
+      { key:'u318',  label:'3.18 Constancy of rest tremor' },
     ],
 
     // Read-only EBP recommendation block shown in Plan tab (per template).
@@ -486,6 +569,38 @@ function visitForm() {
     get dgiInterp() {
       if (this.dgiAnswered === 0) return '';
       return this.dgiTotal <= 19 ? 'เสี่ยงล้ม (≤19)' : 'ปกติ';
+    },
+    get mbestTotal() {
+      return this.mbest_items.reduce((s, it) => s + (Number(this.data.mbest?.[it.key]) || 0), 0);
+    },
+    get mbestAnswered() {
+      return this.mbest_items.filter(it => this.data.mbest?.[it.key] !== undefined).length;
+    },
+    get mbestInterp() {
+      if (this.mbestAnswered === 0) return '';
+      const t = this.mbestTotal;
+      return t < 19 ? 'เสี่ยงล้มสูง' : t < 23 ? 'เสี่ยงล้มปานกลาง' : 'ทรงตัวดี';
+    },
+    get abcAvg() {
+      const vals = this.abc_items.map(it => this.data.abc?.[it.key])
+        .filter(v => v !== undefined && v !== '' && v !== null);
+      if (!vals.length) return 0;
+      return Math.round(vals.reduce((s, v) => s + (Number(v) || 0), 0) / this.abc_items.length);
+    },
+    get abcAnswered() {
+      return this.abc_items.filter(it => {
+        const v = this.data.abc?.[it.key];
+        return v !== undefined && v !== '' && v !== null;
+      }).length;
+    },
+    get abcInterp() {
+      if (this.abcAnswered === 0) return '';
+      const a = this.abcAvg;
+      const lv = a >= 80 ? 'สูง' : a >= 50 ? 'ปานกลาง' : 'ต่ำ';
+      return a < 67 ? lv + ' · เสี่ยงล้ม(<67%)' : lv;
+    },
+    get updrsTotal() {
+      return this.updrs_items.reduce((s, it) => s + (Number(this.data.updrs?.[it.key]) || 0), 0);
     },
 
     get completion() {

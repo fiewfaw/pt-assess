@@ -652,6 +652,102 @@
         </div>
       </section>
 
+      <!-- Section: Mini-BESTest -->
+      <section x-show="sections.includes('mbest') && inTab('mbest')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('mbest')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">⚖️ Mini-BESTest <span class="text-xs text-sky-600 font-normal" x-text="`(${mbestTotal}/28${mbestInterp ? ' · ' + mbestInterp : ''})`"></span></span>
+          <span x-text="open.mbest ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.mbest" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.mbest = !infoOpen.mbest" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.mbest ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน (2/1/0 รายข้อ)'"></span>
+          </button>
+          <div x-show="infoOpen.mbest" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p>14 ข้อ ข้อละ 0–2 · รวม 0–28 · ใช้อุปกรณ์ช่วย=ลด 1 ระดับ · ต้องช่วยเหลือ=0 · ข้อ 3,6 ใช้ข้างที่แย่กว่า</p>
+            <template x-for="it in mbest_items" :key="it.key">
+              <p><b x-text="it.label"></b><br><span x-text="`2=${it.c[0]} · 1=${it.c[1]} · 0=${it.c[2]}`"></span></p>
+            </template>
+          </div>
+          <template x-for="item in mbest_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['mbest', item.key]) !== null ? 'prev ' + prevValue(['mbest', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in mbest_opts">
+                  <button type="button" @click="data.mbest[item.key] = opt"
+                    :class="pillClass(['mbest', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: ABC Scale -->
+      <section x-show="sections.includes('abc') && inTab('abc')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('abc')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">💪 ABC (มั่นใจทรงตัว) <span class="text-xs text-sky-600 font-normal" x-text="`(${abcAvg}%${abcInterp ? ' · ' + abcInterp : ''})`"></span></span>
+          <span x-text="open.abc ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.abc" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.abc = !infoOpen.abc" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.abc ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.abc" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>16 กิจกรรม · ข้อละ 0–100% (0=ไม่มั่นใจ · 100=มั่นใจมาก) · คะแนน = รวม/16</p>
+            <p>≥80 สูง · 50–80 ปานกลาง · &lt;50 ต่ำ · <b>&lt;67% = เสี่ยงล้ม</b></p>
+          </div>
+          <template x-for="item in abc_items" :key="item.key">
+            <label class="block">
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['abc', item.key]) !== null ? 'prev ' + prevValue(['abc', item.key]) : ''"></span>
+              </span>
+              <div class="flex items-center gap-1">
+                <input type="number" min="0" max="100" step="10" inputmode="numeric" x-model.number="data.abc[item.key]" class="input" />
+                <span class="text-xs text-slate-400">%</span>
+              </div>
+            </label>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: MDS-UPDRS Part 3 -->
+      <section x-show="sections.includes('updrs') && inTab('updrs')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('updrs')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🧩 MDS-UPDRS III <span class="text-xs text-sky-600 font-normal" x-text="`(${updrsTotal}/132)`"></span></span>
+          <span x-text="open.updrs ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.updrs" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.updrs = !infoOpen.updrs" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.updrs ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน (0–4)'"></span>
+          </button>
+          <div x-show="infoOpen.updrs" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>33 ข้อ ข้อละ 0–4 · รวม 0–132 · motor exam (ผู้ตรวจให้คะแนน)</p>
+            <p><b>0</b>=ปกติ · <b>1</b>=น้อยมาก · <b>2</b>=น้อย · <b>3</b>=ปานกลาง · <b>4</b>=รุนแรง</p>
+            <p class="text-slate-400">เกณฑ์ละเอียดรายข้อดู MDS-UPDRS PDF (612)</p>
+          </div>
+          <template x-for="item in updrs_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['updrs', item.key]) !== null ? 'prev ' + prevValue(['updrs', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in updrs_opts">
+                  <button type="button" @click="data.updrs[item.key] = opt"
+                    :class="pillClass(['updrs', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
     </div>
 
     <div>

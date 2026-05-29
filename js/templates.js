@@ -64,7 +64,7 @@ const Templates = {
     name: 'Parkinson / Parkinsonism',
     icon: '⚙️',
     description: 'PD / พาร์กินสันเทียม · rigidity (MAS) + gait (ก้าวสั้น/festination) + balance/falls · timed + Berg + DGI + FES-I · แผน cueing-based (อ้างอิง 612)',
-    sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'timed', 'bbsScale', 'dgi', 'fesi', 'mob', 'bi', 'special', 'plan'],
+    sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'timed', 'mbest', 'abc', 'bbsScale', 'dgi', 'fesi', 'updrs', 'mob', 'bi', 'special', 'plan'],
   },
   custom: {
     id: 'custom',
