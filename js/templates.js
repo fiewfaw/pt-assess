@@ -56,8 +56,8 @@ const Templates = {
     id: 'ms',
     name: 'MS / Demyelinating',
     icon: '🌀',
-    description: 'MS / demyelinating · spasticity + balance/gait + fatigue + falls · timed tests (6MWT/10MWT/TUG/5STS) + MFIS ใส่ใน special ก่อน',
-    sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'sens', 'bal', 'mob', 'bi', 'fesi', 'special', 'plan'],
+    description: 'MS / demyelinating · spasticity (MAS) + timed tests (6MWT/10MWT/TUG/5STS) + Berg + DGI + FES-I + MFIS (ล้า) + gait/function · plan ตั้งต้นจาก EBP',
+    sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'sens', 'timed', 'bbsScale', 'dgi', 'fesi', 'mfis', 'mob', 'bi', 'special', 'plan'],
   },
   custom: {
     id: 'custom',

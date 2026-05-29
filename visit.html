@@ -530,6 +530,128 @@
         </div>
       </section>
 
+      <!-- Section: Timed / functional tests -->
+      <section x-show="sections.includes('timed') && inTab('timed')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('timed')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">⏱️ Timed tests</span>
+          <span x-text="open.timed ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.timed" x-collapse class="px-4 pb-4 grid grid-cols-2 gap-2">
+          <template x-for="f in timed_fields" :key="f.key">
+            <label class="block">
+              <span class="text-xs text-slate-500 flex justify-between">
+                <span x-text="f.label"></span>
+                <span class="text-slate-400" x-text="prevValue(['timed', f.key]) !== null ? 'prev ' + prevValue(['timed', f.key]) : ''"></span>
+              </span>
+              <div class="flex items-center gap-1">
+                <input type="number" inputmode="decimal" x-model="data.timed[f.key]" class="input" />
+                <span class="text-xs text-slate-400" x-text="f.unit"></span>
+              </div>
+            </label>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Berg Balance Scale -->
+      <section x-show="sections.includes('bbsScale') && inTab('bbsScale')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('bbsScale')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">⚖️ Berg Balance <span class="text-xs text-sky-600 font-normal" x-text="`(${bbsTotal}/56${bbsInterp ? ' · ' + bbsInterp : ''})`"></span></span>
+          <span x-text="open.bbsScale ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.bbsScale" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.bbsScale = !infoOpen.bbsScale" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.bbsScale ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล'"></span>
+          </button>
+          <div x-show="infoOpen.bbsScale" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>14 ข้อ ข้อละ 0–4 · รวม 0–56 · 4=ดีสุด</p>
+            <p>0–20 wheelchair · 21–40 walk+assist · 41–56 independent · &lt;45 เสี่ยงล้ม</p>
+          </div>
+          <template x-for="item in bbs_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['bbsScale', item.key]) !== null ? 'prev ' + prevValue(['bbsScale', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in bbs_opts">
+                  <button type="button" @click="data.bbsScale[item.key] = opt"
+                    :class="pillClass(['bbsScale', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Dynamic Gait Index -->
+      <section x-show="sections.includes('dgi') && inTab('dgi')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('dgi')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🚶‍♂️ Dynamic Gait Index <span class="text-xs text-sky-600 font-normal" x-text="`(${dgiTotal}/24${dgiInterp ? ' · ' + dgiInterp : ''})`"></span></span>
+          <span x-text="open.dgi ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.dgi" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.dgi = !infoOpen.dgi" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.dgi ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล'"></span>
+          </button>
+          <div x-show="infoOpen.dgi" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>8 ข้อ ข้อละ 0–3 · รวม 0–24 · 3=ปกติ · ≤19 เสี่ยงล้ม</p>
+          </div>
+          <template x-for="item in dgi_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['dgi', item.key]) !== null ? 'prev ' + prevValue(['dgi', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in dgi_opts">
+                  <button type="button" @click="data.dgi[item.key] = opt"
+                    :class="pillClass(['dgi', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: MFIS (fatigue) -->
+      <section x-show="sections.includes('mfis') && inTab('mfis')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('mfis')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">😴 MFIS (ความล้า) <span class="text-xs text-sky-600 font-normal" x-text="`(${mfisTotal}/84${mfisInterp ? ' · ' + mfisInterp : ''})`"></span></span>
+          <span x-text="open.mfis ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.mfis" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.mfis = !infoOpen.mfis" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.mfis ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล'"></span>
+          </button>
+          <div x-show="infoOpen.mfis" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
+            <p>21 ข้อ ข้อละ 0–4 · รวม 0–84 · ช่วง 4 สัปดาห์ · ≥38 = ล้าเด่น</p>
+            <p>P=กาย C=ความคิด S=จิตสังคม</p>
+          </div>
+          <div class="flex gap-2 text-xs font-semibold flex-wrap">
+            <span class="px-2 py-1 rounded bg-rose-50 text-rose-700" x-text="`กาย ${mfisPhysical}/36`"></span>
+            <span class="px-2 py-1 rounded bg-indigo-50 text-indigo-700" x-text="`ความคิด ${mfisCognitive}/40`"></span>
+            <span class="px-2 py-1 rounded bg-emerald-50 text-emerald-700" x-text="`จิตสังคม ${mfisPsychosocial}/8`"></span>
+          </div>
+          <template x-for="item in mfis_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['mfis', item.key]) !== null ? 'prev ' + prevValue(['mfis', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in mfis_opts">
+                  <button type="button" @click="data.mfis[item.key] = opt.v"
+                    :class="pillClass(['mfis', item.key], opt.v)"
+                    x-text="opt.label" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
     </div>
 
     <div>
