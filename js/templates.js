@@ -52,6 +52,13 @@ const Templates = {
     description: 'เคสซับซ้อนหลายระบบ (เช่น post-cancer + จิตใจ + ทรงตัว) — กว้าง ปรับหน้างาน',
     sections: ['info', 'vs', 'bodychart', 'hads', 'fesi', 'bal', 'mob', 'special', 'plan'],
   },
+  ms: {
+    id: 'ms',
+    name: 'MS / Demyelinating',
+    icon: '🌀',
+    description: 'MS / demyelinating · spasticity + balance/gait + fatigue + falls · timed tests (6MWT/10MWT/TUG/5STS) + MFIS ใส่ใน special ก่อน',
+    sections: ['info', 'vs', 'bodychart', 'mas', 'mmt', 'sens', 'bal', 'mob', 'bi', 'fesi', 'special', 'plan'],
+  },
   custom: {
     id: 'custom',
     name: 'Custom (pick sections)',
