@@ -14,17 +14,6 @@
 // Visit submit endpoint (Apps Script Web App — write-only, lands in private Drive/Sheet)
 const VISIT_API_URL = 'https://script.google.com/macros/s/AKfycbznwuHG1U3ZJiQl6QyjgajGFDdNWfmCe3p-1J59XTcmYJ9C8wIBMS1CPaTA6WH6CX6z/exec';
 
-// Editable starting "plan" seeded on the first visit of an MS-template patient
-// (EBP-based; therapist edits per case). See vault EBP-references/MS-pt-management.
-const MS_DEFAULT_PLAN = `[แผนตั้งต้น MS — แก้ตามเคส]
-1. Spasticity: ยืด/จัดท่า ข้างที่เป็น
-2. Strength: resistance 2–3 เซ็ต×8–12 ×2/สัปดาห์
-3. Aerobic: เดิน/ปั่น 20–40 นาที ×3/สัปดาห์ (sub-max)
-4. Balance/gait: task-specific + dual-task
-5. Sit-to-stand training
-6. Fatigue: pacing + cooling (กันร้อน/Uhthoff)
-7. Home program + สอนผู้ดูแล`;
-
 function visitForm() {
   const blankData = () => ({
     date: new Date().toISOString().slice(0, 10),
@@ -307,10 +296,6 @@ function visitForm() {
         const visits = await storage.listVisits(this.hn);
         const nums = visits.map(v => parseInt(v.visitId, 10)).filter(n => !isNaN(n));
         this.visitNumber = (nums.length ? Math.max(...nums) : 0) + 1;
-        // MS template: seed an editable starting plan on the very first visit
-        if (!this.prevVisit && this.template === 'ms' && !this.data.plan) {
-          this.data.plan = MS_DEFAULT_PLAN;
-        }
       } else if (vId) {
         this.mode = 'edit';
         const v = await storage.getVisit(this.hn, vId);
@@ -765,7 +750,7 @@ function visitForm() {
       this.$nextTick(() => {
         const canvas = this.$refs.notepadCanvas;
         if (!canvas) return;
-        if (canvas.width !== 1000) { canvas.width = 1000; canvas.height = 1400; }
+        if (canvas.width !== 1000) { canvas.width = 1000; canvas.height = 4200; }
         this.notepadRedraw();
       });
     },

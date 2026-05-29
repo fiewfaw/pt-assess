@@ -354,7 +354,7 @@
                style="background-image: repeating-linear-gradient(#fff, #fff 31px, #e2e8f0 32px); background-size: 100% 32px;">
             <canvas x-ref="notepadCanvas"
                     class="block w-full"
-                    style="touch-action: none; aspect-ratio: 1000 / 1400;"
+                    style="touch-action: none; aspect-ratio: 1000 / 4200;"
                     @pointerdown.prevent="notepadStart($event)"
                     @pointermove.prevent="notepadMove($event)"
                     @pointerup="notepadEnd()"
@@ -683,24 +683,41 @@
           <span x-text="open.plan ? '▾' : '▸'" class="text-slate-400"></span>
         </button>
         <div x-show="open.plan" x-collapse class="px-4 pb-4 space-y-3">
-          <label class="block">
-            <span class="text-xs text-slate-500">Treatment ที่ทำวันนี้</span>
-            <div class="relative">
-              <textarea x-model="data.intervention" class="input min-h-[70px]" placeholder="- PROM UE/LE\n- Sit balance training x 15 min..."></textarea>
-              <button @click="voice('intervention')" class="absolute right-2 top-2 btn-mic">🎤</button>
-            </div>
-          </label>
-          <label class="block">
-            <span class="text-xs text-slate-500">Plan visit ถัดไป</span>
-            <div class="relative">
-              <textarea x-model="data.plan" class="input min-h-[60px]" placeholder="เน้น..."></textarea>
-              <button @click="voice('plan')" class="absolute right-2 top-2 btn-mic">🎤</button>
-            </div>
-          </label>
-          <label class="block">
-            <span class="text-xs text-slate-500">Notes / Observation อื่น ๆ</span>
-            <textarea x-model="data.notes" class="input min-h-[60px]"></textarea>
-          </label>
+          <!-- MS: read-only EBP recommendation block (treatment จริงเขียนที่แท็บ 📝 จดโน๊ต) -->
+          <div x-show="template === 'ms'" class="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sm text-slate-700 space-y-2">
+            <p class="font-semibold text-sky-800">💡 แนวทางรักษา MS (อ้างอิง EBP — อ่านอย่างเดียว)</p>
+            <ol class="list-decimal list-inside space-y-1">
+              <li><b>Spasticity:</b> ยืด/จัดท่า ข้างที่เป็น</li>
+              <li><b>Strength:</b> resistance 2–3 เซ็ต×8–12 ครั้ง ×2/สัปดาห์</li>
+              <li><b>Aerobic:</b> เดิน/ปั่น 20–40 นาที ×3/สัปดาห์ (sub-max)</li>
+              <li><b>Balance/gait:</b> task-specific + dual-task</li>
+              <li><b>Sit-to-stand</b> training</li>
+              <li><b>Fatigue:</b> pacing + cooling (กันร้อน/Uhthoff)</li>
+              <li><b>Home program</b> + สอนผู้ดูแล</li>
+            </ol>
+            <p class="text-xs text-slate-500">⚠ ทำ sub-max กัน fatigue · เลี่ยงความร้อน · <b>บันทึก treatment จริงที่แท็บ 📝 จดโน๊ต</b></p>
+          </div>
+          <!-- non-MS: editable plan fields -->
+          <div x-show="template !== 'ms'" class="space-y-3">
+            <label class="block">
+              <span class="text-xs text-slate-500">Treatment ที่ทำวันนี้</span>
+              <div class="relative">
+                <textarea x-model="data.intervention" class="input min-h-[70px]" placeholder="- PROM UE/LE\n- Sit balance training x 15 min..."></textarea>
+                <button @click="voice('intervention')" class="absolute right-2 top-2 btn-mic">🎤</button>
+              </div>
+            </label>
+            <label class="block">
+              <span class="text-xs text-slate-500">Plan visit ถัดไป</span>
+              <div class="relative">
+                <textarea x-model="data.plan" class="input min-h-[60px]" placeholder="เน้น..."></textarea>
+                <button @click="voice('plan')" class="absolute right-2 top-2 btn-mic">🎤</button>
+              </div>
+            </label>
+            <label class="block">
+              <span class="text-xs text-slate-500">Notes / Observation อื่น ๆ</span>
+              <textarea x-model="data.notes" class="input min-h-[60px]"></textarea>
+            </label>
+          </div>
         </div>
       </section>
     </div>
