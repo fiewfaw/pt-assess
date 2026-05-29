@@ -259,6 +259,38 @@ function visitForm() {
       { key:'steptest', label:'Step test 3 นาที', unit:'ครั้ง' },
     ],
 
+    // Read-only EBP recommendation block shown in Plan tab (per template).
+    // มี entry = แสดงบล็อกอ่านอย่างเดียว + ซ่อนช่องกรอก (treatment จริง → แท็บ 📝 จดโน๊ต)
+    // ไม่มี entry = ใช้ช่องกรอก plan ปกติ
+    planRecs: {
+      stroke: { title:'💡 แนวทางรักษา Stroke (อ้างอิง EBP)', items:[
+        'Task-specific training — ฝึกกิจกรรมจริง จำนวนครั้งสูง เน้นใช้ข้างอ่อนแรง',
+        'Strength training — เพิ่มแรงข้างอ่อนแรง (ไม่เพิ่ม spasticity)',
+        'Gait + balance — task-oriented · ลุกนั่ง/เดิน · treadmill ถ้าเหมาะ',
+        'UE: CIMT/mCIMT ถ้าเข้าเกณฑ์ (มี active wrist/finger ext) · ฝึกใช้มือจริง',
+        'Aerobic conditioning ตามที่ทนได้',
+        'Spasticity: ยืด / จัดท่า / positioning',
+        'Home program + สอนผู้ดูแล · ทำต่อเนื่อง',
+      ]},
+      complex: { title:'💡 แนวทาง เคสซับซ้อนหลายระบบ', items:[
+        'ไล่ priority ทีละระบบ (หายใจ → mobility → balance → จิตใจ)',
+        'Breathing / diaphragm + lateral costal expansion ถ้ามีปัญหาทรวงอก',
+        'Soft tissue / scar / manual therapy ตามข้อจำกัด',
+        'Balance training (รวม eyes-closed) ถ้ามี deficit',
+        'จิตใจ/ความกังวล: therapeutic touch · graded · ไม่บังคับ',
+        'Home program + ผู้ดูแล · ปรับตามวันที่ทนได้',
+      ]},
+      ms: { title:'💡 แนวทางรักษา MS (อ้างอิง EBP)', items:[
+        'Spasticity: ยืด/จัดท่า ข้างที่เป็น',
+        'Strength: resistance 2–3 เซ็ต×8–12 ครั้ง ×2/สัปดาห์',
+        'Aerobic: เดิน/ปั่น 20–40 นาที ×3/สัปดาห์ (sub-max)',
+        'Balance/gait: task-specific + dual-task',
+        'Sit-to-stand training',
+        'Fatigue: pacing + cooling (กันร้อน/Uhthoff)',
+        'Home program + สอนผู้ดูแล',
+      ]},
+    },
+
     async init() {
       const params = new URLSearchParams(location.search);
       this.hn = params.get('hn');
@@ -373,6 +405,8 @@ function visitForm() {
     get templateInfo() {
       return window.Templates[this.template];
     },
+
+    get planRec() { return this.planRecs[this.template] || null; },
 
     get bi_total() {
       return Object.values(this.data.bi || {}).reduce((s,v) => s + (Number(v)||0), 0);
