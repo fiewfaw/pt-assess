@@ -560,11 +560,15 @@
         </button>
         <div x-show="open.bbsScale" x-collapse class="px-4 pb-4 space-y-2">
           <button type="button" @click="infoOpen.bbsScale = !infoOpen.bbsScale" class="text-xs text-sky-600 font-semibold">
-            <span x-text="infoOpen.bbsScale ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล'"></span>
+            <span x-text="infoOpen.bbsScale ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน (4/3/2/1/0 รายข้อ)'"></span>
           </button>
-          <div x-show="infoOpen.bbsScale" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-0.5">
-            <p>14 ข้อ ข้อละ 0–4 · รวม 0–56 · 4=ดีสุด</p>
+          <div x-show="infoOpen.bbsScale" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p class="font-semibold">14 ข้อ ข้อละ 0–4 · รวม 0–56 · 4=ดีสุด</p>
             <p>0–20 wheelchair · 21–40 walk+assist · 41–56 independent · &lt;45 เสี่ยงล้ม</p>
+            <hr class="border-sky-100 my-1">
+            <template x-for="it in bbs_items" :key="it.key">
+              <p><b x-text="it.label"></b><br><span x-text="`4=${it.c[0]} · 3=${it.c[1]} · 2=${it.c[2]} · 1=${it.c[3]} · 0=${it.c[4]}`"></span></p>
+            </template>
           </div>
           <template x-for="item in bbs_items" :key="item.key">
             <div>
