@@ -351,12 +351,15 @@ function visitForm() {
     planRecs: {
       stroke: { title:'💡 แนวทางรักษา Stroke (อ้างอิง EBP)', items:[
         'Task-specific training — ฝึกกิจกรรมจริง จำนวนครั้งสูง เน้นใช้ข้างอ่อนแรง',
-        'Strength training — เพิ่มแรงข้างอ่อนแรง (ไม่เพิ่ม spasticity)',
+        'Strength training — เพิ่มแรงข้างอ่อนแรง (ไม่กระตุ้น spasticity เพิ่ม)',
+        'LE spasticity / equinovarus + เท้าจิก: ยืด plantarflexor + toe flexor ใน subtalar-neutral ค้างนานช้าๆ (ห้ามกระตุก) · จัดท่า / AFO / posterior splint / serial cast กันหดสั้น',
+        'ลงน้ำหนักผ่านเท้า (non-estim = แกนหลัก): progressive bridging → sit-to-stand → ยืนถ่ายน้ำหนัก · โหลดช้าผ่านส้นเท้า (เท้าราบ ไม่จิก) · feedback ตาชั่ง/กระจก',
         'Gait + balance — task-oriented · ลุกนั่ง/เดิน · treadmill ถ้าเหมาะ',
+        'FES/NMES dorsiflexor = adjunct ลด plantarflexor spasticity (reciprocal inhibition) / ช่วยกระดกเท้า — ใช้เมื่อยังมี active dorsiflexion เหลือ',
+        'เกร็งแรง (MAS ≥ 2) หรือ contracture ติด → ปรึกษาแพทย์เวชศาสตร์ฟื้นฟู พิจารณา BoNT-A ± serial casting',
         'UE: CIMT/mCIMT ถ้าเข้าเกณฑ์ (มี active wrist/finger ext) · ฝึกใช้มือจริง',
         'Aerobic conditioning ตามที่ทนได้',
-        'Spasticity: ยืด / จัดท่า / positioning',
-        'Home program + สอนผู้ดูแล · ทำต่อเนื่อง',
+        'Home program + สอนผู้ดูแล · ทำต่อเนื่อง · บันทึก treatment จริงที่แท็บ 📝',
       ]},
       complex: { title:'💡 แนวทาง เคสซับซ้อนหลายระบบ', items:[
         'ไล่ priority ทีละระบบ (หายใจ → mobility → balance → จิตใจ)',
