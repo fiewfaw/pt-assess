@@ -251,17 +251,20 @@ function visitForm() {
       { key:'d8', label:'8. ขึ้น-ลงบันได' },
     ],
 
-    // Timed / functional tests
+    // Timed / functional tests · unit = หน่วยที่ต้องกรอก
     timed_fields: [
-      { key:'sixmwt',   label:'6MWT',            unit:'m' },
-      { key:'tenmwt_n', label:'10MWT ปกติ',      unit:'วิ/10m' },
-      { key:'tenmwt_f', label:'10MWT เร็วสุด',   unit:'วิ/10m' },
-      { key:'tug',      label:'TUG',             unit:'วิ' },
-      { key:'sts5',     label:'5×Sit-to-Stand',  unit:'วิ' },
-      { key:'tandemL',  label:'Tandem ซ้าย',     unit:'วิ' },
-      { key:'tandemR',  label:'Tandem ขวา',      unit:'วิ' },
-      { key:'romberg',  label:'Romberg หลับตา',  unit:'วิ' },
-      { key:'steptest', label:'Step test 3 นาที', unit:'ครั้ง' },
+      { key:'sixmwt',   label:'6MWT (เดิน 6 นาที)',     unit:'เมตร' },
+      { key:'tenmwt_n', label:'10MWT ความเร็วปกติ',     unit:'วินาที (ต่อ 10 ม.)' },
+      { key:'tenmwt_f', label:'10MWT เร็วสุด',          unit:'วินาที (ต่อ 10 ม.)' },
+      { key:'tug',      label:'TUG',                    unit:'วินาที' },
+      { key:'tug_dual', label:'TUG + dual-task (นับเลข)', unit:'วินาที' },
+      { key:'sts5',     label:'5×Sit-to-Stand',         unit:'วินาที' },
+      { key:'slsL',     label:'Single-leg stance ซ้าย', unit:'วินาที' },
+      { key:'slsR',     label:'Single-leg stance ขวา',  unit:'วินาที' },
+      { key:'tandemL',  label:'Tandem ซ้าย',            unit:'วินาที' },
+      { key:'tandemR',  label:'Tandem ขวา',             unit:'วินาที' },
+      { key:'romberg',  label:'Romberg หลับตา',         unit:'วินาที' },
+      { key:'steptest', label:'Step test 3 นาที',        unit:'ครั้ง' },
     ],
 
     // Mini-BESTest (Thai, SWU — Chaikeeree/Rattanavichit/Boonsinsukh) — 14 ข้อ 0-2 (รวม 28)
