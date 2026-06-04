@@ -37,6 +37,9 @@ function visitForm() {
     mbest: {},       // Mini-BESTest — item(1-14) -> 0-2
     abc: {},         // ABC Scale — item(1-16) -> 0-100
     updrs: {},       // MDS-UPDRS Part 3 — item -> 0-4
+    stream: {},      // STREAM — UE/LE voluntary 0-2 · mobility 0-3
+    fmaUE: {},       // Fugl-Meyer UE motor — item -> 0-2 (reflex 0/2)
+    fmaLE: {},       // Fugl-Meyer LE motor — item -> 0-2 (reflex 0/2)
     timed: {},       // timed/functional tests
     special: {},
     otherFindings: '',
@@ -71,14 +74,16 @@ function visitForm() {
       sens: 'assess', hads: 'assess', fesi: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
       timed: 'assess', bbsScale: 'assess', dgi: 'assess', mfis: 'assess',
       mbest: 'assess', abc: 'assess', updrs: 'assess',
+      stream: 'assess', fmaUE: 'assess', fmaLE: 'assess',
       plan: 'plan',
     },
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
             mmt: true, sens: true, hads: true, fesi: true, bodychart: true, bal: true, mob: true, bi: true,
             timed: true, bbsScale: true, dgi: true, mfis: true,
             mbest: true, abc: true, updrs: true,
+            stream: true, fmaUE: true, fmaLE: true,
             special: true, plan: true },
-    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false },
+    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false, stream: false, fmaUE: false, fmaLE: false },
 
     // Body chart canvas state
     chartTool: 'pain',
@@ -345,6 +350,107 @@ function visitForm() {
       { key:'u318',  label:'3.18 Constancy of rest tremor' },
     ],
 
+    // STREAM (Daley 1999) — 30 items · UE/LE voluntary 0-2 · mobility (MOB) 0-3
+    // voluntary: 0=ทำไม่ได้/แค่กระตุก · 1=ทำได้บางส่วน หรือครบแต่ผิดแบบมาก · 2=ครบ เท่าข้างปกติ
+    // mobility:  0=ทำไม่ได้ · 1=ทำได้บางส่วน ต้องช่วย/ผิดแบบมาก · 2=ทำเองครบ แต่ต้องใช้อุปกรณ์ช่วย · 3=ทำเองครบ ปกติ ไม่ใช้อุปกรณ์
+    stream_vol_opts: [0,1,2],
+    stream_mob_opts: [0,1,2,3],
+    stream_items: [
+      // UE voluntary (10)
+      { key:'st1',  sub:'UE',  label:'1. ดึงสะบักไปข้างหน้า (protract scapula, นอนหงาย ไหล่งอ 90°)' },
+      { key:'st2',  sub:'UE',  label:'2. เหยียดศอก (นอนหงาย เริ่มจากศอกงอสุด)' },
+      { key:'st7',  sub:'UE',  label:'7. ยักไหล่ (scapular elevation, นั่ง)' },
+      { key:'st8',  sub:'UE',  label:'8. ยกมือแตะหัว' },
+      { key:'st9',  sub:'UE',  label:'9. เอามือไพล่หลัง (แตะก้นกบ)' },
+      { key:'st10', sub:'UE',  label:'10. ยกแขนเหนือศีรษะสุด (ศอกเหยียด)' },
+      { key:'st11', sub:'UE',  label:'11. คว่ำ-หงายแขน (ศอกงอ 90°)' },
+      { key:'st12', sub:'UE',  label:'12. กำมือ (นิ้วโป้งอยู่นอก, ข้อมือกระดกเล็กน้อย)' },
+      { key:'st13', sub:'UE',  label:'13. แบมือจากกำสุด' },
+      { key:'st14', sub:'UE',  label:'14. จีบนิ้วโป้ง-ชี้ (tip to tip)' },
+      // LE voluntary (10)
+      { key:'st3',  sub:'LE',  label:'3. งอสะโพก-เข่า (นอนหงาย → half crook lying)' },
+      { key:'st15', sub:'LE',  label:'15. งอสะโพก (นั่ง — ยกเข่าสูง)' },
+      { key:'st16', sub:'LE',  label:'16. เหยียดเข่า (นั่ง)' },
+      { key:'st17', sub:'LE',  label:'17. งอเข่า (นั่ง — ลากเท้าถอยใต้ตัว)' },
+      { key:'st18', sub:'LE',  label:'18. กระดกข้อเท้า (นั่ง — ส้นติดพื้น)' },
+      { key:'st19', sub:'LE',  label:'19. ถีบปลายเท้า/PF (นั่ง — ยกส้น)' },
+      { key:'st20', sub:'LE',  label:'20. เหยียดเข่า + กระดกข้อเท้า (นั่ง)' },
+      { key:'st23', sub:'LE',  label:'23. กางสะโพกข้างอ่อนแรง (เข่าเหยียด, ยืนเกาะ)' },
+      { key:'st24', sub:'LE',  label:'24. งอเข่าข้างอ่อนแรง (สะโพกเหยียด, ยืนเกาะ)' },
+      { key:'st25', sub:'LE',  label:'25. กระดกข้อเท้าข้างอ่อนแรง (เข่าเหยียด, ยืนเกาะ)' },
+      // Basic mobility (10) — score 0-3
+      { key:'st4',  sub:'MOB', label:'4. พลิกตะแคง (จากนอนหงาย)' },
+      { key:'st5',  sub:'MOB', label:'5. ยกก้น/สะพาน (bridging, crook lying)' },
+      { key:'st6',  sub:'MOB', label:'6. ลุกจากนอนหงาย→นั่ง (เท้าแตะพื้น)' },
+      { key:'st21', sub:'MOB', label:'21. ลุกนั่ง→ยืน (ลงน้ำหนัก 2 ข้างเท่ากัน)' },
+      { key:'st22', sub:'MOB', label:'22. ยืนทรงตัว 20 วินาที' },
+      { key:'st26', sub:'MOB', label:'26. วางเท้าข้างอ่อนแรงขึ้นขั้น (สตูล 18 ซม.)' },
+      { key:'st27', sub:'MOB', label:'27. ก้าวถอยหลัง 3 ก้าว' },
+      { key:'st28', sub:'MOB', label:'28. ก้าวข้าง 3 ก้าว ไปข้างอ่อนแรง' },
+      { key:'st29', sub:'MOB', label:'29. เดิน 10 เมตร (พื้นเรียบ)' },
+      { key:'st30', sub:'MOB', label:'30. เดินลงบันได 3 ขั้น สลับเท้า' },
+    ],
+
+    // Fugl-Meyer (1975) — 0=ทำไม่ได้ · 1=ทำได้บางส่วน · 2=ทำได้เต็ม · reflex = 0/2 เท่านั้น
+    fma_opts: [0,1,2],
+    fma_reflex_opts: [0,2],
+    // FMA Upper Extremity motor — 33 items (max 66)
+    fmaUE_items: [
+      { key:'ue1',  reflex:true, label:'I. Reflex — flexor (biceps/นิ้วงอ)' },
+      { key:'ue2',  reflex:true, label:'I. Reflex — extensor (triceps)' },
+      { key:'ue3',  label:'II. Flexor synergy — ดึงไหล่ถอยหลัง (retraction)' },
+      { key:'ue4',  label:'II. ยกไหล่ (elevation)' },
+      { key:'ue5',  label:'II. กางไหล่ (abduction)' },
+      { key:'ue6',  label:'II. หมุนไหล่ออก (external rotation)' },
+      { key:'ue7',  label:'II. งอศอก (elbow flexion)' },
+      { key:'ue8',  label:'II. หงายแขน (forearm supination)' },
+      { key:'ue9',  label:'III. Extensor synergy — หุบ+หมุนไหล่เข้า' },
+      { key:'ue10', label:'III. เหยียดศอก (elbow extension)' },
+      { key:'ue11', label:'III. คว่ำแขน (forearm pronation)' },
+      { key:'ue12', label:'IV. Mix — มือแตะหลังเอว (hand to lumbar)' },
+      { key:'ue13', label:'IV. งอไหล่ 0–90° (ศอกเหยียด)' },
+      { key:'ue14', label:'IV. คว่ำ-หงาย (ศอก 90° ไหล่ 0°)' },
+      { key:'ue15', label:'V. Out of synergy — กางไหล่ 0–90° (ศอกเหยียด คว่ำแขน)' },
+      { key:'ue16', label:'V. งอไหล่ 90–180°' },
+      { key:'ue17', label:'V. คว่ำ-หงาย (ศอกเหยียด ไหล่งอ 30–90°)' },
+      { key:'ue18', reflex:true, label:'VI. Normal reflex (biceps/triceps/นิ้ว — ประเมินเมื่อ V เต็ม)' },
+      { key:'ue19', label:'Wrist — ทรงข้อมือ (ศอก 90°, ไหล่ 0°)' },
+      { key:'ue20', label:'Wrist — กระดก/งอข้อมือ (ศอก 90°)' },
+      { key:'ue21', label:'Wrist — ทรงข้อมือ (ศอกเหยียด)' },
+      { key:'ue22', label:'Wrist — กระดก/งอข้อมือ (ศอกเหยียด)' },
+      { key:'ue23', label:'Wrist — หมุนข้อมือ (circumduction)' },
+      { key:'ue24', label:'Hand — กำนิ้วรวม (mass flexion)' },
+      { key:'ue25', label:'Hand — แบนิ้วรวม (mass extension)' },
+      { key:'ue26', label:'Hand — hook grasp (งอ MCP เหยียด IP)' },
+      { key:'ue27', label:'Hand — กดกระดาษด้วยโป้ง (lateral/thumb add)' },
+      { key:'ue28', label:'Hand — หยิบดินสอ (pincer, โป้ง-ชี้)' },
+      { key:'ue29', label:'Hand — จับกระป๋อง (cylinder grasp)' },
+      { key:'ue30', label:'Hand — จับลูกบอล (spherical grasp)' },
+      { key:'ue31', label:'Coord — finger-nose: tremor' },
+      { key:'ue32', label:'Coord — finger-nose: dysmetria' },
+      { key:'ue33', label:'Coord — finger-nose: speed' },
+    ],
+    // FMA Lower Extremity motor — 17 items (max 34)
+    fmaLE_items: [
+      { key:'le1',  reflex:true, label:'I. Reflex — Achilles' },
+      { key:'le2',  reflex:true, label:'I. Reflex — patellar' },
+      { key:'le3',  label:'II. Flexor synergy (นอนหงาย) — งอสะโพก' },
+      { key:'le4',  label:'II. งอเข่า' },
+      { key:'le5',  label:'II. กระดกข้อเท้า (DF)' },
+      { key:'le6',  label:'III. Extensor synergy — เหยียดสะโพก' },
+      { key:'le7',  label:'III. หุบสะโพก (adduction)' },
+      { key:'le8',  label:'III. เหยียดเข่า' },
+      { key:'le9',  label:'III. ถีบข้อเท้า (PF)' },
+      { key:'le10', label:'IV. Mix (นั่ง) — งอเข่า >90°' },
+      { key:'le11', label:'IV. กระดกข้อเท้า (นั่ง)' },
+      { key:'le12', label:'V. Out of synergy (ยืน) — งอเข่า (สะโพก 0°)' },
+      { key:'le13', label:'V. กระดกข้อเท้า (ยืน)' },
+      { key:'le14', reflex:true, label:'VI. Normal reflex (เข่า/Achilles — ประเมินเมื่อ V เต็ม)' },
+      { key:'le15', label:'VII. Coord — heel-shin: tremor' },
+      { key:'le16', label:'VII. Coord — heel-shin: dysmetria' },
+      { key:'le17', label:'VII. Coord — heel-shin: speed' },
+    ],
+
     // Read-only EBP recommendation block shown in Plan tab (per template).
     // มี entry = แสดงบล็อกอ่านอย่างเดียว + ซ่อนช่องกรอก (treatment จริง → แท็บ 📝 จดโน๊ต)
     // ไม่มี entry = ใช้ช่องกรอก plan ปกติ
@@ -607,6 +713,37 @@ function visitForm() {
     },
     get updrsTotal() {
       return this.updrs_items.reduce((s, it) => s + (Number(this.data.updrs?.[it.key]) || 0), 0);
+    },
+
+    // ---- STREAM scoring (UE/LE voluntary /20 · MOB /30 · raw /70 · normalize /100) ----
+    _streamSub(sub) {
+      return this.stream_items.filter(it => it.sub === sub)
+        .reduce((s, it) => s + (Number(this.data.stream?.[it.key]) || 0), 0);
+    },
+    get streamUE() { return this._streamSub('UE'); },   // /20
+    get streamLE() { return this._streamSub('LE'); },   // /20
+    get streamMOB() { return this._streamSub('MOB'); }, // /30
+    get streamTotal() { return this.streamUE + this.streamLE + this.streamMOB; }, // /70
+    get streamPct() { return Math.round(this.streamTotal / 70 * 100); },
+    get streamAnswered() {
+      return this.stream_items.filter(it => this.data.stream?.[it.key] !== undefined).length;
+    },
+    get fmaUEtotal() {
+      return this.fmaUE_items.reduce((s, it) => s + (Number(this.data.fmaUE?.[it.key]) || 0), 0);
+    },
+    get fmaUEanswered() {
+      return this.fmaUE_items.filter(it => this.data.fmaUE?.[it.key] !== undefined).length;
+    },
+    get fmaUEinterp() {
+      if (this.fmaUEanswered === 0) return '';
+      const t = this.fmaUEtotal; // Woodbury severity bands
+      return t <= 28 ? 'รุนแรง' : t <= 42 ? 'ปานกลาง-รุนแรง' : t <= 56 ? 'ปานกลาง' : 'น้อย';
+    },
+    get fmaLEtotal() {
+      return this.fmaLE_items.reduce((s, it) => s + (Number(this.data.fmaLE?.[it.key]) || 0), 0);
+    },
+    get fmaLEanswered() {
+      return this.fmaLE_items.filter(it => this.data.fmaLE?.[it.key] !== undefined).length;
     },
 
     get completion() {

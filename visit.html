@@ -749,6 +749,108 @@
         </div>
       </section>
 
+      <!-- Section: STREAM -->
+      <section x-show="sections.includes('stream') && inTab('stream')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('stream')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🏃 STREAM <span class="text-xs text-sky-600 font-normal" x-text="`(${streamTotal}/70 = ${streamPct}%)`"></span></span>
+          <span x-text="open.stream ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.stream" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.stream = !infoOpen.stream" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.stream ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.stream" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p><b>แขน/ขา (voluntary, 0–2):</b> 0=ทำไม่ได้/แค่กระตุก · 1=ทำได้บางส่วน หรือครบแต่ผิดแบบมาก · 2=ครบ เท่าข้างปกติ</p>
+            <p><b>Mobility (0–3):</b> 0=ทำไม่ได้ · 1=ทำบางส่วน ต้องช่วย/ผิดแบบมาก · 2=ทำเองครบ แต่ใช้อุปกรณ์ช่วย · 3=ทำเองครบ ปกติ ไม่ใช้อุปกรณ์</p>
+            <p>30 ข้อ · UE /20 · LE /20 · Mobility /30 · รวม /70 → แปลงเป็น % (ข้อที่วัดไม่ได้เพราะ ROM/ปวด ข้ามได้)</p>
+          </div>
+          <div class="flex gap-2 text-xs font-semibold flex-wrap">
+            <span class="px-2 py-1 rounded bg-sky-50 text-sky-700" x-text="`แขน ${streamUE}/20`"></span>
+            <span class="px-2 py-1 rounded bg-emerald-50 text-emerald-700" x-text="`ขา ${streamLE}/20`"></span>
+            <span class="px-2 py-1 rounded bg-amber-50 text-amber-700" x-text="`Mobility ${streamMOB}/30`"></span>
+          </div>
+          <template x-for="item in stream_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['stream', item.key]) !== null ? 'prev ' + prevValue(['stream', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in (item.sub === 'MOB' ? stream_mob_opts : stream_vol_opts)">
+                  <button type="button" @click="data.stream[item.key] = opt"
+                    :class="pillClass(['stream', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Fugl-Meyer UE -->
+      <section x-show="sections.includes('fmaUE') && inTab('fmaUE')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('fmaUE')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🖐️ FMA แขน (UE) <span class="text-xs text-sky-600 font-normal" x-text="`(${fmaUEtotal}/66${fmaUEinterp ? ' · ' + fmaUEinterp : ''})`"></span></span>
+          <span x-text="open.fmaUE ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.fmaUE" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.fmaUE = !infoOpen.fmaUE" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.fmaUE ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.fmaUE" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p><b>0</b>=ทำไม่ได้ · <b>1</b>=ทำได้บางส่วน · <b>2</b>=ทำได้เต็ม · <b>Reflex</b>=0/2 เท่านั้น</p>
+            <p>33 ข้อ · รวม /66 · ความรุนแรง: ≤28 รุนแรง · 29–42 ปานกลาง-รุนแรง · 43–56 ปานกลาง · 57–66 น้อย</p>
+          </div>
+          <template x-for="item in fmaUE_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['fmaUE', item.key]) !== null ? 'prev ' + prevValue(['fmaUE', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in (item.reflex ? fma_reflex_opts : fma_opts)">
+                  <button type="button" @click="data.fmaUE[item.key] = opt"
+                    :class="pillClass(['fmaUE', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Section: Fugl-Meyer LE -->
+      <section x-show="sections.includes('fmaLE') && inTab('fmaLE')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('fmaLE')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🦵 FMA ขา (LE) <span class="text-xs text-sky-600 font-normal" x-text="`(${fmaLEtotal}/34)`"></span></span>
+          <span x-text="open.fmaLE ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.fmaLE" x-collapse class="px-4 pb-4 space-y-2">
+          <button type="button" @click="infoOpen.fmaLE = !infoOpen.fmaLE" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.fmaLE ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์ให้คะแนน'"></span>
+          </button>
+          <div x-show="infoOpen.fmaLE" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p><b>0</b>=ทำไม่ได้ · <b>1</b>=ทำได้บางส่วน · <b>2</b>=ทำได้เต็ม · <b>Reflex</b>=0/2 เท่านั้น</p>
+            <p>17 ข้อ · รวม /34</p>
+          </div>
+          <template x-for="item in fmaLE_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['fmaLE', item.key]) !== null ? 'prev ' + prevValue(['fmaLE', item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in (item.reflex ? fma_reflex_opts : fma_opts)">
+                  <button type="button" @click="data.fmaLE[item.key] = opt"
+                    :class="pillClass(['fmaLE', item.key], opt)"
+                    x-text="opt" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
     </div>
 
     <div>
