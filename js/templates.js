@@ -41,9 +41,8 @@ const Templates = {
     id: 'sci',
     name: 'Spinal Cord Injury',
     icon: '🦴',
-    description: 'Para/tetraplegia, ASIA',
-    sections: ['info', 'vs', 'asia', 'mas', 'mmt', 'sens', 'mob', 'bi', 'plan'],
-    stub: true,
+    description: 'Para/tetraplegia · ASIA/ISNCSCI + SCIM III',
+    sections: ['info', 'vs', 'asia', 'mmt', 'sens', 'mas', 'mob', 'scim', 'bi', 'plan'],
   },
   complex: {
     id: 'complex',

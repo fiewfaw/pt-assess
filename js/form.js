@@ -24,6 +24,8 @@ function visitForm() {
     mas: {},
     mmt: {},
     sensation: {},
+    asia: { motor: {}, dap: '', vac: '', motorR: '', motorL: '', sensR: '', sensL: '', nli: '', ais: '' }, // SCI ASIA/ISNCSCI
+    scim: { selfcare: '', resp: '', mobility: '' }, // SCIM III subscores (self-care 0-20 · resp&sphincter 0-40 · mobility 0-40)
     hads: {},        // Thai HADS — item(1-14) -> 0-3
     fesi: {},        // Thai FES-I — item(1-16) -> 1-4
     bodyChart: [],   // array of strokes [{tool, color, size, points: [[x,y],...]}]
@@ -71,6 +73,7 @@ function visitForm() {
     sectionTab: {
       info: 'note', bodychart: 'note',
       vs: 'assess', cog: 'assess', brun: 'assess', mas: 'assess', mmt: 'assess',
+      asia: 'assess', scim: 'assess',
       sens: 'assess', hads: 'assess', fesi: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
       timed: 'assess', bbsScale: 'assess', dgi: 'assess', mfis: 'assess',
       mbest: 'assess', abc: 'assess', updrs: 'assess',
@@ -78,12 +81,13 @@ function visitForm() {
       plan: 'plan',
     },
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
+            asia: true, scim: true,
             mmt: true, sens: true, hads: true, fesi: true, bodychart: true, bal: true, mob: true, bi: true,
             timed: true, bbsScale: true, dgi: true, mfis: true,
             mbest: true, abc: true, updrs: true,
             stream: true, fmaUE: true, fmaLE: true,
             special: true, plan: true },
-    infoOpen: { brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false, stream: false, fmaUE: false, fmaLE: false },
+    infoOpen: { asia: false, brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false, stream: false, fmaUE: false, fmaLE: false },
 
     // Body chart canvas state
     chartTool: 'pain',
