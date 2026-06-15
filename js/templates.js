@@ -49,7 +49,7 @@ const Templates = {
     name: 'Multi-system / Complex',
     icon: '🎗️',
     description: 'เคสซับซ้อนหลายระบบ (เช่น post-cancer + จิตใจ + ทรงตัว) — กว้าง ปรับหน้างาน',
-    sections: ['info', 'vs', 'bodychart', 'hads', 'fesi', 'bal', 'mob', 'special', 'plan'],
+    sections: ['info', 'vs', 'bodychart', 'nutrition', 'hads', 'fesi', 'bal', 'mob', 'special', 'plan'],
   },
   ms: {
     id: 'ms',

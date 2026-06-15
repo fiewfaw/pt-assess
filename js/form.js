@@ -28,6 +28,7 @@ function visitForm() {
     scim: { selfcare: '', resp: '', mobility: '' }, // SCIM III subscores (self-care 0-20 · resp&sphincter 0-40 · mobility 0-40)
     hads: {},        // Thai HADS — item(1-14) -> 0-3
     fesi: {},        // Thai FES-I — item(1-16) -> 1-4
+    nutrition: { wt: '', ht: '', calf: '', mna: {}, snaq: {} }, // MNA-SF (a-f -> 0-3) + SNAQ (q1-q3) + anthro
     bodyChart: [],   // array of strokes [{tool, color, size, points: [[x,y],...]}]
     noteCanvas: [],  // handwriting notepad strokes (tab 1)
     balance: {}, bbs: '',
@@ -74,7 +75,7 @@ function visitForm() {
       info: 'note', bodychart: 'note',
       vs: 'assess', cog: 'assess', brun: 'assess', mas: 'assess', mmt: 'assess',
       asia: 'assess', scim: 'assess',
-      sens: 'assess', hads: 'assess', fesi: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
+      sens: 'assess', hads: 'assess', fesi: 'assess', nutrition: 'assess', bal: 'assess', mob: 'assess', bi: 'assess', special: 'assess',
       timed: 'assess', bbsScale: 'assess', dgi: 'assess', mfis: 'assess',
       mbest: 'assess', abc: 'assess', updrs: 'assess',
       stream: 'assess', fmaUE: 'assess', fmaLE: 'assess',
@@ -82,12 +83,12 @@ function visitForm() {
     },
     open: { info: true, vs: true, cog: true, brun: true, mas: true,
             asia: true, scim: true,
-            mmt: true, sens: true, hads: true, fesi: true, bodychart: true, bal: true, mob: true, bi: true,
+            mmt: true, sens: true, hads: true, fesi: true, nutrition: true, bodychart: true, bal: true, mob: true, bi: true,
             timed: true, bbsScale: true, dgi: true, mfis: true,
             mbest: true, abc: true, updrs: true,
             stream: true, fmaUE: true, fmaLE: true,
             special: true, plan: true },
-    infoOpen: { asia: false, brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false, stream: false, fmaUE: false, fmaLE: false },
+    infoOpen: { asia: false, brun: false, mas: false, mmt: false, mob: false, bi: false, hads: false, fesi: false, nutrition: false, bbsScale: false, dgi: false, mfis: false, mbest: false, abc: false, updrs: false, stream: false, fmaUE: false, fmaLE: false },
 
     // Body chart canvas state
     chartTool: 'pain',
@@ -197,6 +198,33 @@ function visitForm() {
       { key:'f14', label:'14. เดินบนพื้นไม่เรียบ' },
       { key:'f15', label:'15. เดินขึ้น-ลงทางลาดชัน' },
       { key:'f16', label:'16. ไปร่วมงานชุมชน เช่น ทำบุญที่วัด/มัสยิด' },
+    ],
+
+    // ---- Nutrition ----
+    // MNA-SF (Mini Nutritional Assessment — Short Form, Thai/Nestlé) — 6 ข้อ คะแนนต่างกันรายข้อ · รวม 0-14
+    mna_items: [
+      { key:'a', label:'A. การกินใน 3 เดือน (เบื่ออาหาร/ปัญหาเคี้ยว-กลืน)',
+        opts:[{v:0,label:'ลดลงมาก'},{v:1,label:'ลดปานกลาง'},{v:2,label:'ไม่เปลี่ยน'}] },
+      { key:'b', label:'B. น้ำหนักลดใน 3 เดือน',
+        opts:[{v:0,label:'ลด >3 กก.'},{v:1,label:'ไม่ทราบ'},{v:2,label:'ลด 1–3 กก.'},{v:3,label:'ไม่ลด'}] },
+      { key:'c', label:'C. การเคลื่อนไหว',
+        opts:[{v:0,label:'ติดเตียง/รถเข็น'},{v:1,label:'ลุกได้ ไม่ออกนอกบ้าน'},{v:2,label:'เดินได้ปกติ'}] },
+      { key:'d', label:'D. เครียดรุนแรง/ป่วยเฉียบพลันใน 3 เดือน',
+        opts:[{v:0,label:'มี'},{v:2,label:'ไม่มี'}] },
+      { key:'e', label:'E. ปัญหาทางจิตประสาท',
+        opts:[{v:0,label:'สมองเสื่อม/ซึมเศร้ารุนแรง'},{v:1,label:'สมองเสื่อมเล็กน้อย'},{v:2,label:'ไม่มี'}] },
+      { key:'f', label:'F. BMI (kg/m²) — ชั่งไม่ได้ใช้เส้นรอบน่องแทน',
+        opts:[{v:0,label:'<19'},{v:1,label:'19–<21'},{v:2,label:'21–<23'},{v:3,label:'≥23'}] },
+    ],
+
+    // SNAQ (Short Nutritional Assessment Questionnaire, Kruizenga) — 3 ข้อ · รวม → traffic light
+    snaq_items: [
+      { key:'q1', label:'1. น้ำหนักลดโดยไม่ตั้งใจ',
+        opts:[{v:0,label:'ไม่ลด'},{v:2,label:'>3 กก. ใน 1 เดือน'},{v:3,label:'>6 กก. ใน 6 เดือน'}] },
+      { key:'q2', label:'2. ความอยากอาหารลดลงในเดือนที่ผ่านมา',
+        opts:[{v:0,label:'ไม่'},{v:1,label:'ใช่'}] },
+      { key:'q3', label:'3. ได้รับอาหารเสริม/อาหารทางสายในเดือนที่ผ่านมา',
+        opts:[{v:0,label:'ไม่'},{v:1,label:'ใช่'}] },
     ],
 
     // ---- MS battery ----
@@ -647,6 +675,39 @@ function visitForm() {
       if (t >= 28) return 'กังวลหกล้มสูง';
       if (t >= 20) return 'กังวลปานกลาง';
       return 'กังวลต่ำ';
+    },
+
+    // ---- Nutrition scoring (MNA-SF /14 + SNAQ traffic-light) ----
+    get nutriBMI() {
+      const w = Number(this.data.nutrition?.wt), h = Number(this.data.nutrition?.ht);
+      if (!w || !h) return null;
+      return Math.round((w / ((h / 100) ** 2)) * 10) / 10;
+    },
+    get mnaTotal() {
+      return this.mna_items.reduce((s, it) => s + (Number(this.data.nutrition?.mna?.[it.key]) || 0), 0);
+    },
+    get mnaAnswered() {
+      return this.mna_items.filter(it => this.data.nutrition?.mna?.[it.key] !== undefined).length;
+    },
+    get mnaInterp() {
+      if (this.mnaAnswered === 0) return '';
+      const t = this.mnaTotal;
+      if (t <= 7) return 'ขาดสารอาหาร';
+      if (t <= 11) return 'เสี่ยงขาดสารอาหาร';
+      return 'ปกติ';
+    },
+    get snaqTotal() {
+      return this.snaq_items.reduce((s, it) => s + (Number(this.data.nutrition?.snaq?.[it.key]) || 0), 0);
+    },
+    get snaqAnswered() {
+      return this.snaq_items.filter(it => this.data.nutrition?.snaq?.[it.key] !== undefined).length;
+    },
+    get snaqInterp() {
+      if (this.snaqAnswered === 0) return '';
+      const t = this.snaqTotal;
+      if (t >= 3) return 'ขาดสารอาหารรุนแรง';
+      if (t === 2) return 'ขาดสารอาหารปานกลาง';
+      return 'ปกติ';
     },
 
     // ---- MS battery scoring ----

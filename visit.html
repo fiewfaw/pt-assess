@@ -625,6 +625,72 @@
         </div>
       </section>
 
+      <!-- Section: Nutrition (MNA-SF + SNAQ) -->
+      <section x-show="sections.includes('nutrition') && inTab('nutrition')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
+        <button @click="toggle('nutrition')" class="w-full px-4 py-3 flex justify-between items-center text-left">
+          <span class="font-semibold">🍚 โภชนาการ <span class="text-xs text-sky-600 font-normal" x-text="`(MNA ${mnaTotal}/14${mnaInterp ? ' · ' + mnaInterp : ''})`"></span></span>
+          <span x-text="open.nutrition ? '▾' : '▸'" class="text-slate-400"></span>
+        </button>
+        <div x-show="open.nutrition" x-collapse class="px-4 pb-4 space-y-3">
+          <button type="button" @click="infoOpen.nutrition = !infoOpen.nutrition" class="text-xs text-sky-600 font-semibold">
+            <span x-text="infoOpen.nutrition ? '▾ ซ่อนเกณฑ์' : 'ⓘ เกณฑ์แปลผล + ข้อควรระวัง'"></span>
+          </button>
+          <div x-show="infoOpen.nutrition" x-collapse class="bg-sky-50 border border-sky-100 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p><b>MNA-SF</b> (เต็ม 14): 12–14 ปกติ · 8–11 เสี่ยงขาดสารอาหาร · 0–7 ขาดสารอาหาร</p>
+            <p><b>SNAQ</b>: 0–1 ปกติ · 2 ขาดสารอาหารปานกลาง (เพิ่มมื้อว่าง) · ≥3 รุนแรง (ส่งต่อนักโภชนาการ)</p>
+            <p>ข้อ F: ถ้าชั่ง นน./คิด BMI ไม่ได้ → ใช้เส้นรอบวงน่อง <b>&lt;31 ซม.=0 · ≥31 ซม.=3</b></p>
+            <p class="text-rose-600">⚠ เคสมะเร็ง: เบื่ออาหาร/คลื่นไส้ อาจมาจาก <b>แคลเซียมสูง (hypercalcemia)</b> หรือผลข้างเคียงยา/ท้องผูก → คัด + ปรึกษาแพทย์ ก่อนสรุปว่าเป็นเรื่องจิตใจ</p>
+          </div>
+
+          <!-- Anthropometry -->
+          <div class="grid grid-cols-3 gap-2">
+            <label><span class="text-xs text-slate-500">นน. (กก.)</span>
+              <input type="number" inputmode="decimal" x-model="data.nutrition.wt" class="input" :class="changedClass(['nutrition','wt'])" /></label>
+            <label><span class="text-xs text-slate-500">ส่วนสูง (ซม.)</span>
+              <input type="number" inputmode="decimal" x-model="data.nutrition.ht" class="input" :class="changedClass(['nutrition','ht'])" /></label>
+            <label><span class="text-xs text-slate-500">รอบน่อง (ซม.)</span>
+              <input type="number" inputmode="decimal" x-model="data.nutrition.calf" class="input" :class="changedClass(['nutrition','calf'])" /></label>
+          </div>
+          <p class="text-xs text-slate-500" x-show="nutriBMI">BMI = <b x-text="nutriBMI"></b><span class="text-slate-400"> kg/m² (ใช้เลือกข้อ F)</span></p>
+
+          <!-- MNA-SF -->
+          <p class="text-sm font-semibold text-slate-600 pt-1">MNA-SF <span class="text-xs font-normal text-sky-600" x-text="`${mnaTotal}/14${mnaInterp ? ' · ' + mnaInterp : ''}`"></span></p>
+          <template x-for="item in mna_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['nutrition','mna',item.key]) !== null ? 'prev ' + prevValue(['nutrition','mna',item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in item.opts">
+                  <button type="button" @click="data.nutrition.mna[item.key] = opt.v"
+                    :class="pillClass(['nutrition','mna',item.key], opt.v)"
+                    x-text="opt.v + ' ' + opt.label" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <!-- SNAQ -->
+          <p class="text-sm font-semibold text-slate-600 pt-2 border-t border-slate-100">SNAQ <span class="text-xs font-normal text-sky-600" x-text="`${snaqTotal}${snaqInterp ? ' · ' + snaqInterp : ''}`"></span></p>
+          <template x-for="item in snaq_items" :key="item.key">
+            <div>
+              <span class="text-sm flex justify-between">
+                <span x-text="item.label"></span>
+                <span class="text-xs text-slate-400" x-text="prevValue(['nutrition','snaq',item.key]) !== null ? 'prev ' + prevValue(['nutrition','snaq',item.key]) : ''"></span>
+              </span>
+              <div class="flex gap-1 mt-1 flex-wrap">
+                <template x-for="opt in item.opts">
+                  <button type="button" @click="data.nutrition.snaq[item.key] = opt.v"
+                    :class="pillClass(['nutrition','snaq',item.key], opt.v)"
+                    x-text="opt.label" class="text-xs"></button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
       <!-- Section: Timed / functional tests -->
       <section x-show="sections.includes('timed') && inTab('timed')" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-3 overflow-hidden">
         <button @click="toggle('timed')" class="w-full px-4 py-3 flex justify-between items-center text-left">
